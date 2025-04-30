@@ -1,0 +1,194 @@
+.admin-navbar {
+  background-color: #1F2937;
+  padding: 1rem 1.5rem;
+  color: #fff;
+  position: relative;
+  z-index: 1000;
+}
+
+.admin-navbar .admin-navbar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.admin-navbar .admin-navbar-brand {
+  font-size: 1.5rem;
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+}
+
+.admin-navbar .admin-navbar-links {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-navbar .admin-navbar-links li {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.admin-navbar .admin-navbar-links li a,
+.admin-navbar .admin-logout-button {
+  color: #fff;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.3s ease;
+}
+
+.admin-navbar .admin-navbar-links li a:hover,
+.admin-navbar .admin-logout-button:hover {
+  color: #f97316;
+}
+
+/* Dropdown */
+.admin-navbar .dropdown {
+  position: relative;
+}
+
+.admin-navbar .dropdown-toggle {
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+}
+
+.admin-navbar .dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #fff;
+  min-width: 160px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  border-radius: 5px;
+  list-style: none;
+  animation: admin-navbar-dropdownFade 0.3s ease forwards;
+  opacity: 0;
+  transform: translateY(-10px);
+  z-index: 1000;
+  padding: 0.5rem 0;
+}
+
+.admin-navbar .dropdown:hover .dropdown-menu {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.admin-navbar .dropdown-menu li a {
+  padding: 10px 16px;
+  color: #333;
+  display: block;
+}
+
+.admin-navbar .dropdown-menu li a:hover {
+  background-color: #007bff;
+  color: #fff;
+  border-radius: 4px;
+}
+
+/* Hamburger (mobile) */
+.admin-navbar .hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.admin-navbar .hamburger div {
+  width: 25px;
+  height: 3px;
+  background-color: white;
+  transition: 0.3s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-navbar .admin-navbar-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-navbar .hamburger {
+    display: flex;
+    margin-left: auto;
+  }
+
+  .admin-navbar .admin-navbar-links {
+    flex-direction: column;
+    width: 100%;
+    display: none;
+    background-color: #1F2937;
+    margin-top: 1rem;
+    animation: admin-navbar-slideIn 0.3s ease forwards;
+  }
+
+  .admin-navbar .admin-navbar-links.show {
+    display: flex;
+  }
+
+  .admin-navbar .admin-navbar-links li {
+    width: 100%;
+    padding: 0.5rem 0;
+  }
+
+  .admin-navbar .admin-navbar-links li a,
+  .admin-navbar .admin-logout-button {
+    width: 100%;
+    justify-content: flex-start;
+    padding-left: 1rem;
+  }
+
+  .admin-navbar .dropdown-menu {
+    position: static;
+    background-color: transparent;
+    box-shadow: none;
+    transform: none;
+    opacity: 1;
+    padding: 0;
+  }
+
+  .admin-navbar .dropdown-menu li a {
+    color: #fff;
+    background-color: transparent;
+  }
+
+  .admin-navbar .dropdown-menu li a:hover {
+    background-color: #374151;
+  }
+}
+
+/* Animations */
+@keyframes admin-navbar-dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes admin-navbar-slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

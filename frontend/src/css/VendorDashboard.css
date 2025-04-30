@@ -1,0 +1,115 @@
+.vendor-dashboard {
+  padding: 2rem;
+  font-family: Arial, sans-serif;
+}
+
+h2 {
+  font-size: 24px;
+  margin-bottom: 1rem;
+}
+
+/* Filter Row */
+.date-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.date-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.date-field label {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.date-field input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Buttons */
+.download-buttons {
+  margin-bottom: 1rem;
+}
+
+.download-buttons button {
+  padding: 10px 16px;
+  margin-right: 10px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.download-buttons button:hover {
+  background-color: #0056b3;
+}
+
+/* Table Wrapper */
+.table-container {
+  overflow-x: auto;
+}
+
+/* Table */
+.vendor-table {
+  width: 100%;
+  min-width: 600px;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.vendor-table th,
+.vendor-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.vendor-table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+.vendor-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.loading,
+.no-data {
+  font-size: 16px;
+  font-style: italic;
+  color: #666;
+  margin-top: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .vendor-dashboard {
+    padding: 1rem;
+  }
+
+  .download-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .vendor-table {
+    font-size: 14px;
+  }
+
+  .date-filters {
+    flex-direction: column;
+  }
+
+  .date-field input {
+    width: 100%;
+  }
+}
