@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import apiClient from "../api/auth";  // Import your apiClient
-import "../css/VendorFilesView.css";
+import apiClient from "../api/auth"; // Import your apiClient
+import { CircularProgress, Grid, Card, CardContent, Typography, Button, Box, Alert } from "@mui/material"; // MUI components
 
 const VendorFilesView = () => {
   const { vendorId } = useParams();
@@ -16,80 +16,97 @@ const VendorFilesView = () => {
   }, [vendorId]);
 
   const fetchVendorInvoices = async () => {
-    setError("");
+    setError(""); // Clear any previous errors
+    setLoading(true); // Start loading state
     try {
       const res = await apiClient({
         endpoint: `/admin-invoices/vendor-files/${vendorId}`,
         method: "GET",
       });
-      setInvoices(res);
+      setInvoices(res); // Set fetched invoices
     } catch (err) {
       console.error("Error fetching vendor invoices:", err);
       setError("Failed to load vendor invoices.");
     } finally {
-      setLoading(false);
+      setLoading(false); // Stop loading state
     }
   };
 
+  const handleDownload = (fileName) => {
+    const fileUrl = `http://localhost:5000/uploads/${fileName}`;
+    window.open(fileUrl, "_blank"); // Open file in a new tab
+  };
+
   return (
-    <div className="vendor-files-view">
-      <h2>Files for Vendor ID: {vendorId}</h2>
+    <Box sx={{ padding: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Files for Vendor ID: {vendorId}
+      </Typography>
 
       {loading ? (
-        <p>Loading invoices...</p>
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "60vh" }}>
+          <CircularProgress />
+        </Box>
       ) : error ? (
-        <p style={{ color: "red" }}>{error}</p>
+        <Alert severity="error">{error}</Alert> // MUI Alert for error
       ) : invoices.length > 0 ? (
-        <div className="vendor-files-grid">
+        <Grid container spacing={3}>
           {invoices.map((invoice) => (
-            <div className="vendor-files-card" key={invoice._id}>
-              <div className="row">
-                <span className="label">Invoice No.:</span>
-                <span className="value">{invoice.invoiceNo}</span>
-              </div>
-              <div className="row">
-                <span className="label">Date:</span>
-                <span className="value">{invoice.date}</span>
-              </div>
-              <div className="row">
-                <span className="label">Month:</span>
-                <span className="value">{invoice.month}</span>
-              </div>
-              <div className="row">
-                <span className="label">Amount:</span>
-                <span className="value">{invoice.amount}</span>
-              </div>
-              <div className="row">
-                <span className="label">Download:</span>
-                <span className="value download-links">
-                  {Array.isArray(invoice.fileName) ? (
-                    invoice.fileName.map((file, index) => (
-                      <div key={index}>
-                        <a
-                          href={`http://localhost:5000/uploads/${file}`}
-                          download
+            <Grid item xs={12} sm={6} md={4} key={invoice._id}>
+              {/* 3 cards per row */}
+              <Card sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',  // Ensure card fills its container
+                boxShadow: 3,
+                borderRadius: 2
+              }}>
+                <CardContent sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', flexGrow: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                    Invoice No.: {invoice.invoiceNo}
+                  </Typography>
+                  <Typography>Date: {invoice.date}</Typography>
+                  <Typography>Month: {invoice.month}</Typography>
+                  <Typography>Amount: {invoice.amount}</Typography>
+
+                  <Box mt={2}>
+                    <Typography variant="body2" color="textSecondary">
+                      Download:
+                    </Typography>
+                    {Array.isArray(invoice.fileName) ? (
+                      invoice.fileName.map((file, index) => (
+                        <Button
+                          key={index}
+                          onClick={() => handleDownload(file)}
+                          variant="contained"
+                          color="primary"
+                          sx={{ marginTop: 1, width: "100%" }}
                         >
                           {file}
-                        </a>
-                      </div>
-                    ))
-                  ) : (
-                    <a
-                      href={`http://localhost:5000/uploads/${invoice.fileName}`}
-                      download
-                    >
-                      {invoice.fileName}
-                    </a>
-                  )}
-                </span>
-              </div>
-            </div>
+                        </Button>
+                      ))
+                    ) : (
+                      <Button
+                        onClick={() => handleDownload(invoice.fileName)}
+                        variant="contained"
+                        color="primary"
+                        sx={{ marginTop: 1, width: "100%" }}
+                      >
+                        {invoice.fileName}
+                      </Button>
+                    )}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
           ))}
-        </div>
+        </Grid>
       ) : (
-        <p>No invoices found for this vendor.</p>
+        <Typography variant="body1" color="textSecondary" align="center">
+          No invoices found for this vendor.
+        </Typography>
       )}
-    </div>
+    </Box>
   );
 };
 

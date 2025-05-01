@@ -1,33 +1,46 @@
-import React, { useEffect, useState } from "react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
-import apiClient from "../api/auth";  // Import your apiClient
-import "../css/VendorDashboard.css";
+import React, { useEffect, useState } from 'react';
+import { 
+  Box, 
+  Toolbar, 
+  Typography, 
+  TextField, 
+  Button, 
+  TableContainer, 
+  Table, 
+  TableHead, 
+  TableRow, 
+  TableCell, 
+  TableBody, 
+  Paper 
+} from '@mui/material';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+import apiClient from '../api/auth';
 
 const VendorDashboard = () => {
   const [vendorOrders, setVendorOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
 
-  const user = JSON.parse(sessionStorage.getItem("user"));
+  const user = JSON.parse(sessionStorage.getItem('user'));
   const vendorId = user?.vendorId;
 
   const fetchVendorOrders = async () => {
     if (!vendorId) return;
-
+    setLoading(true);
     try {
-      setLoading(true);
       const res = await apiClient({
         endpoint: `/vendorOrders/orders/${vendorId}`,
         method: 'GET',
         params: { from_date: fromDate, to_date: toDate },
       });
-      setVendorOrders(res);
+      // If your client puts data on res.data, do: setVendorOrders(res.data)
+      setVendorOrders(Array.isArray(res) ? res : res.data ?? []);
     } catch (err) {
-      console.error("Error fetching vendor orders:", err);
+      console.error('Error fetching vendor orders:', err);
     } finally {
       setLoading(false);
     }
@@ -41,87 +54,111 @@ const VendorDashboard = () => {
 
   const downloadPDF = () => {
     const doc = new jsPDF();
-    doc.text("Vendor Orders", 14, 15);
-
+    doc.text('Vendor Orders', 14, 15);
     autoTable(doc, {
       startY: 20,
-      head: [["DLR CODE", "DLR NAME", "Part No.", "QTY", "Order No.", "PO"]],
-      body: vendorOrders.map((order) => [
-        order.dlrCode || "N/A",
-        order.dlrName || "N/A",
-        order.partNo || "N/A",
-        order.qty || "N/A",
-        order.orderNo || "N/A",
-        order.po || "N/A",
+      head: [['DLR CODE', 'DLR NAME', 'Part No.', 'QTY', 'Order No.', 'PO']],
+      body: vendorOrders.map((o) => [
+        o.dlrCode || 'N/A',
+        o.dlrName || 'N/A',
+        o.partNo || 'N/A',
+        o.qty || 'N/A',
+        o.orderNo || 'N/A',
+        o.po || 'N/A',
       ]),
     });
-
-    doc.save("vendor_orders.pdf");
+    doc.save('vendor_orders.pdf');
   };
 
   const downloadExcel = () => {
     const ws = XLSX.utils.json_to_sheet(vendorOrders);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "VendorOrders");
-    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    const data = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-    saveAs(data, "vendor_orders.xlsx");
+    XLSX.utils.book_append_sheet(wb, ws, 'VendorOrders');
+    const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    saveAs(
+      new Blob([buf], {
+        type:
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      }),
+      'vendor_orders.xlsx'
+    );
   };
 
   return (
-    <div className="vendor-dashboard">
-      <h2>Vendor Orders</h2>
+    <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+      <Toolbar />
+      <Typography variant="h5" gutterBottom>
+        Vendor Orders
+      </Typography>
 
-      <div className="date-filters">
-        <div className="date-field">
-          <label>From Date:</label>
-          <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-        </div>
-
-        <div className="date-field">
-          <label>To Date:</label>
-          <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
-        </div>
-      </div>
-
-      <div className="download-buttons">
-        <button onClick={downloadPDF}>Download PDF</button>
-        <button onClick={downloadExcel}>Download Excel</button>
-      </div>
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 2,
+          mb: 3,
+        }}
+      >
+        <TextField
+          label="From Date"
+          type="date"
+          value={fromDate}
+          onChange={(e) => setFromDate(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+        />
+        <TextField
+          label="To Date"
+          type="date"
+          value={toDate}
+          onChange={(e) => setToDate(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+        />
+        <Button
+          variant="contained"
+          onClick={downloadPDF}
+          disabled={vendorOrders.length === 0}
+        >
+          Download PDF
+        </Button>
+        <Button
+          variant="contained"
+          onClick={downloadExcel}
+          disabled={vendorOrders.length === 0}
+        >
+          Download Excel
+        </Button>
+      </Box>
 
       {loading ? (
-        <p className="loading">Loading vendor orders...</p>
+        <Typography>Loading vendor orders...</Typography>
       ) : vendorOrders.length > 0 ? (
-        <div className="table-container">
-          <table className="vendor-table">
-            <thead>
-              <tr>
-                <th>DLR CODE</th>
-                <th>DLR NAME</th>
-                <th>Part No.</th>
-                <th>QTY</th>
-                <th>Order No.</th>
-                <th>PO</th>
-              </tr>
-            </thead>
-            <tbody>
-              {vendorOrders.map((order, index) => (
-                <tr key={index}>
-                  <td>{order.dlrCode || "N/A"}</td>
-                  <td>{order.dlrName || "N/A"}</td>
-                  <td>{order.partNo || "N/A"}</td>
-                  <td>{order.qty || "N/A"}</td>
-                  <td>{order.orderNo || "N/A"}</td>
-                  <td>{order.po || "N/A"}</td>
-                </tr>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                {['DLR CODE','DLR NAME','Part No.','QTY','Order No.','PO'].map((h) => (
+                  <TableCell key={h}>{h}</TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {vendorOrders.map((o, idx) => (
+                <TableRow key={idx}>
+                  <TableCell>{o.dlrCode || 'N/A'}</TableCell>
+                  <TableCell>{o.dlrName || 'N/A'}</TableCell>
+                  <TableCell>{o.partNo || 'N/A'}</TableCell>
+                  <TableCell>{o.qty || 'N/A'}</TableCell>
+                  <TableCell>{o.orderNo || 'N/A'}</TableCell>
+                  <TableCell>{o.po || 'N/A'}</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
       ) : (
-        <p className="no-data">No orders found for the selected date range.</p>
+        <Typography>No orders found for the selected date range.</Typography>
       )}
-    </div>
+    </Box>
   );
 };
 

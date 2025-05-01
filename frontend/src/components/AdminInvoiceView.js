@@ -1,52 +1,68 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import apiClient from "../api/auth"; // Adjust path if needed
-import "../css/AdminInvoiceView.css";
+import {
+  Box,
+  Toolbar,
+  Typography,
+  Grid,
+  Card,
+  CardActionArea,
+  CardContent,
+  CircularProgress,
+} from "@mui/material";
+import apiClient from "../api/auth";
 
-const AdminInvoiceView = () => {
-  const [vendorIds, setVendorIds] = useState([]);
+export default function AdminInvoiceView() {
+  const [vendorIds, setVendorIds] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchVendorIds();
+    (async () => {
+      try {
+        const invoices = await apiClient({ endpoint: "/admin-invoices" });
+        // if your client wraps data in `data`, do: const invoices = res.data
+        const ids = Array.isArray(invoices)
+          ? invoices.map((inv) => inv.vendorId)
+          : invoices.data?.map((inv) => inv.vendorId) ?? [];
+        setVendorIds([...new Set(ids)]);
+      } catch (err) {
+        console.error("Error fetching invoices:", err);
+        setVendorIds([]);
+      }
+    })();
   }, []);
 
-  const fetchVendorIds = async () => {
-    try {
-      const invoices = await apiClient({ endpoint: "/admin-invoices" });
-      const uniqueVendors = [...new Set(invoices.map((inv) => inv.vendorId))];
-      setVendorIds(uniqueVendors);
-    } catch (error) {
-      console.error("Error fetching invoices:", error);
-    }
-  };
-
-  const handleVendorClick = (vendorId) => {
-    navigate(`/vendor-files/${vendorId}`);
+  const handleVendorClick = (id) => {
+    navigate(`/vendor-files/${id}`);
   };
 
   return (
-    <div className="admin-invoice-view">
-      <h2>Vendor Invoice</h2>
-      <div className="vendor-card-container">
-        {vendorIds.length > 0 ? (
-          vendorIds.map((vendorId) => (
-            <div
-              key={vendorId}
-              className="vendor-card"
-              onClick={() => handleVendorClick(vendorId)}
-            >
-              <p>
-                Vendor ID: <strong>{vendorId}</strong>
-              </p>
-            </div>
-          ))
-        ) : (
-          <p>No vendor invoices found.</p>
-        )}
-      </div>
-    </div>
-  );
-};
+    <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+      <Toolbar />
+      <Typography variant="h5" gutterBottom>
+        Vendor Invoices
+      </Typography>
 
-export default AdminInvoiceView;
+      {vendorIds === null ? (
+        <CircularProgress />
+      ) : vendorIds.length === 0 ? (
+        <Typography>No vendor invoices found.</Typography>
+      ) : (
+        <Grid container spacing={2}>
+          {vendorIds.map((id) => (
+            <Grid item xs={12} sm={6} md={4} key={id}>
+              <Card>
+                <CardActionArea onClick={() => handleVendorClick(id)}>
+                  <CardContent>
+                    <Typography variant="subtitle1">Vendor ID</Typography>
+                    <Typography variant="h6">{id}</Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
+    </Box>
+  );
+}

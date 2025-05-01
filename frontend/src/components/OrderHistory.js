@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import apiClient from "../api/auth"; // ✅ Use your centralized API client
-import "../css/OrderHistory.css";
-
+import { Box, Grid, TextField, Button, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+ 
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
@@ -17,7 +17,7 @@ const OrderHistory = () => {
       try {
         const response = await apiClient({
           endpoint: "/orderhistory",
-          method: "GET"
+          method: "GET",
         });
         setOrders(response);
         setFilteredOrders(response);
@@ -36,97 +36,126 @@ const OrderHistory = () => {
     let filtered = orders;
 
     if (dealerName) {
-      filtered = filtered.filter(order =>
+      filtered = filtered.filter((order) =>
         order.dlrName.toLowerCase().includes(dealerName.toLowerCase())
       );
     }
 
     if (partNo) {
-      filtered = filtered.filter(order =>
+      filtered = filtered.filter((order) =>
         order.partNo.toLowerCase().includes(partNo.toLowerCase())
       );
     }
 
     if (selectedDate) {
-      filtered = filtered.filter(order =>
-        new Date(order.date).toISOString().split("T")[0] === selectedDate
+      filtered = filtered.filter(
+        (order) =>
+          new Date(order.date).toISOString().split("T")[0] === selectedDate
       );
     }
 
     setFilteredOrders(filtered);
   }, [dealerName, partNo, selectedDate, orders]);
 
-  if (loading) return <p>Loading order history...</p>;
-  if (error) return <p>{error}</p>;
+  const handleClearFilters = () => {
+    setDealerName("");
+    setPartNo("");
+    setSelectedDate("");
+    setFilteredOrders(orders); // Reset to show all orders
+  };
+
+  if (loading) return <Typography>Loading order history...</Typography>;
+  if (error) return <Typography>{error}</Typography>;
 
   return (
-    <div className="order-history-container">
-      <h2>Order History</h2>
+    <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+      <Typography variant="h5" gutterBottom>
+        Order History
+      </Typography>
 
-      <div className="filter-container">
-        <input
-          type="text"
-          placeholder="Search by Dealer Name"
-          value={dealerName}
-          onChange={(e) => setDealerName(e.target.value)}
-          className="filter-input"
-        />
+      <Paper sx={{ p: 3, mb: 4 }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="Search by Dealer Name"
+              value={dealerName}
+              onChange={(e) => setDealerName(e.target.value)}
+              fullWidth
+            />
+          </Grid>
 
-        <input
-          type="text"
-          placeholder="Search by Part No."
-          value={partNo}
-          onChange={(e) => setPartNo(e.target.value)}
-          className="filter-input"
-        />
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="Search by Part No."
+              value={partNo}
+              onChange={(e) => setPartNo(e.target.value)}
+              fullWidth
+            />
+          </Grid>
 
-        <input
-          type="date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          className="filter-input"
-        />
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="Select Date"
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              fullWidth
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
+          </Grid>
 
-        <button onClick={() => { setDealerName(""); setPartNo(""); setSelectedDate(""); }} className="clear-filters">
-          Clear Filters
-        </button>
-      </div>
+          <Grid item xs={12}>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={handleClearFilters}
+              sx={{ mt: 2 }}
+            >
+              Clear Filters
+            </Button>
+          </Grid>
+        </Grid>
+      </Paper>
 
-      <div className="table-wrapper">
-        <table className="order-history-table">
-          <thead>
-            <tr>
-              <th>Order No.</th>
-              <th>Dealer Code</th>
-              <th>Dealer Name</th>
-              <th>Part No.</th>
-              <th>Quantity</th>
-              <th>PO</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredOrders.length > 0 ? (
-              filteredOrders.map((order) => (
-                <tr key={order._id}>
-                  <td>{order.orderNo}</td>
-                  <td>{order.dlrCode}</td>
-                  <td>{order.dlrName}</td>
-                  <td>{order.partNo}</td>
-                  <td>{order.qty}</td>
-                  <td>{order.po}</td>
-                  <td>{new Date(order.date).toLocaleDateString()}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="7">No orders found.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
+      <Paper sx={{ p: 3 }}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Order No.</TableCell>
+                <TableCell>Dealer Code</TableCell>
+                <TableCell>Dealer Name</TableCell>
+                <TableCell>Part No.</TableCell>
+                <TableCell>Quantity</TableCell>
+                <TableCell>PO</TableCell>
+                <TableCell>Date</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredOrders.length > 0 ? (
+                filteredOrders.map((order) => (
+                  <TableRow key={order._id}>
+                    <TableCell>{order.orderNo}</TableCell>
+                    <TableCell>{order.dlrCode}</TableCell>
+                    <TableCell>{order.dlrName}</TableCell>
+                    <TableCell>{order.partNo}</TableCell>
+                    <TableCell>{order.qty}</TableCell>
+                    <TableCell>{order.po}</TableCell>
+                    <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7}>No orders found.</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+    </Box>
   );
 };
 

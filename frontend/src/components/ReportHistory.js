@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import apiClient from "../api/auth"; // centralized API client
-import "../css/ReportHistory.css";
+import apiClient from "../api/auth"; // your centralized client
+import { Box, Button, InputAdornment, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from '@mui/material';
 
 const ReportHistory = () => {
   const [reports, setReports] = useState([]);
@@ -14,8 +14,21 @@ const ReportHistory = () => {
     const fetchReports = async () => {
       try {
         const response = await apiClient({ endpoint: "/reporthistory", method: "GET" });
-        setReports(response.data);
-        setFilteredReports(response.data);
+        const raw = 
+          Array.isArray(response) 
+            ? response 
+            : Array.isArray(response.data) 
+              ? response.data 
+              : Array.isArray(response.data?.data) 
+                ? response.data.data 
+                : [];
+        console.log("Resolved report array:", raw);
+        const sanitized = raw.map((r) => ({
+          ...r,
+          reports: Array.isArray(r.reports) ? r.reports : [],
+        }));
+        setReports(sanitized);
+        setFilteredReports(sanitized);
       } catch (err) {
         console.error("Fetch Error:", err);
         setError("Failed to fetch report history");
@@ -27,7 +40,6 @@ const ReportHistory = () => {
     fetchReports();
   }, []);
 
-  // Filtering logic
   useEffect(() => {
     let filtered = reports;
 
@@ -52,91 +64,106 @@ const ReportHistory = () => {
     setFilteredReports(filtered);
   }, [searchTerm, selectedDate, reports]);
 
-  if (loading) return <p>Loading report history...</p>;
-  if (error) return <p>{error}</p>;
+  if (loading) return <Typography>Loading report history...</Typography>;
+  if (error) return <Typography color="error">{error}</Typography>;
+
+  const validReports = filteredReports.filter((r) => r.reports.length > 0);
 
   return (
-    <div className="report-history-container">
-      <h2>Report History</h2>
+    <Box sx={{ padding: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Report History
+      </Typography>
 
       {/* Filters */}
-      <div className="filter-container">
-        <input
-          type="text"
-          placeholder="Search by Product Name"
+      <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+        <TextField
+          label="Search by Product Name"
+          variant="outlined"
+          fullWidth
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="filter-input"
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <Button onClick={() => setSearchTerm("")} size="small">
+                  Clear
+                </Button>
+              </InputAdornment>
+            ),
+          }}
         />
-
-        <input
+        <TextField
+          label="Select Date"
           type="date"
+          variant="outlined"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
-          className="filter-input"
+          InputLabelProps={{
+            shrink: true,
+          }}
         />
-
-        <button
+        <Button
+          variant="contained"
           onClick={() => {
             setSearchTerm("");
             setSelectedDate("");
           }}
-          className="clear-filters"
         >
           Clear Filters
-        </button>
-      </div>
+        </Button>
+      </Box>
 
-      {/* Responsive Table Wrapper */}
-      <div className="table-wrapper">
-        <table className="report-history-table">
-          <thead>
-            <tr>
-              <th>Vendor ID</th>
-              <th>Category</th>
-              <th>Part No.</th>
-              <th>Product Name</th>
-              <th>Amount</th>
-              <th>Quantity</th>
-              <th>Total</th>
-              <th>Final Total</th>
-              <th>Month</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredReports.length > 0 ? (
-              filteredReports.map((report) =>
-                report.reports.map((item, index) => (
-                  <tr key={`${report._id}-${index}`}>
-                    <td>{report.vendorId}</td>
-                    <td>{item.category}</td>
-                    <td>{item.partNo}</td>
-                    <td>{item.productName}</td>
-                    <td>{item.amount}</td>
-                    <td>{item.qty}</td>
-                    <td>{item.total}</td>
-                    {index === 0 && (
+      {/* Table */}
+      <TableContainer sx={{ maxHeight: 400 }}>
+        <Table stickyHeader>
+          <TableHead>
+            <TableRow>
+              <TableCell>Vendor ID</TableCell>
+              <TableCell>Category</TableCell>
+              <TableCell>Part No.</TableCell>
+              <TableCell>Product Name</TableCell>
+              <TableCell>Amount</TableCell>
+              <TableCell>Quantity</TableCell>
+              <TableCell>Total</TableCell>
+              <TableCell>Final Total</TableCell>
+              <TableCell>Month</TableCell>
+              <TableCell>Date</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {validReports.length > 0 ? (
+              validReports.map((report) =>
+                report.reports.map((item, idx) => (
+                  <TableRow key={`${report._id}-${idx}`}>
+                    <TableCell>{report.vendorId}</TableCell>
+                    <TableCell>{item.category}</TableCell>
+                    <TableCell>{item.partNo}</TableCell>
+                    <TableCell>{item.productName}</TableCell>
+                    <TableCell>{item.amount}</TableCell>
+                    <TableCell>{item.qty}</TableCell>
+                    <TableCell>{item.total}</TableCell>
+                    {idx === 0 && (
                       <>
-                        <td rowSpan={report.reports.length}>{report.finalTotal}</td>
-                        <td rowSpan={report.reports.length}>{report.month}</td>
-                        <td rowSpan={report.reports.length}>
+                        <TableCell rowSpan={report.reports.length}>{report.finalTotal}</TableCell>
+                        <TableCell rowSpan={report.reports.length}>{report.month}</TableCell>
+                        <TableCell rowSpan={report.reports.length}>
                           {new Date(report.createdAt).toLocaleDateString()}
-                        </td>
+                        </TableCell>
                       </>
                     )}
-                  </tr>
+                  </TableRow>
                 ))
               )
             ) : (
-              <tr>
-                <td colSpan="10">No reports found.</td>
-              </tr>
+              <TableRow>
+                <TableCell colSpan={10} align="center">No reports found.</TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
   );
 };
 

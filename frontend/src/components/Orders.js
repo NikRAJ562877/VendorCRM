@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
-import "../css/Order.css";
+import { Box, Grid, TextField, Button, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import apiClient from "../api/auth"; // centralized API client
-
+ 
 const Orders = () => {
   const [file, setFile] = useState(null);
   const [orders, setOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [editableRows, setEditableRows] = useState({});
-  const [setSelectedRows] = useState({});
   const [defaultDate, setDefaultDate] = useState("");
 
   const headers = [
@@ -89,10 +88,6 @@ const Orders = () => {
     setEditableRows((prev) => ({ ...prev, [orders.length]: true }));
   };
 
-  const handleCheckboxChange = (index) => {
-    setSelectedRows((prev) => ({ ...prev, [index]: !prev[index] }));
-  };
-
   const sendToVendor = async () => {
     if (orders.length === 0) {
       alert("No orders to upload.");
@@ -133,80 +128,145 @@ const Orders = () => {
   );
 
   return (
-    <div className="orders-container">
-      <h2>Order Management</h2>
+    <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+      <Typography variant="h5" gutterBottom>
+        Order Management
+      </Typography>
 
-      <div className="top-controls">
-        <label htmlFor="date">Select Date:</label>
-        <input
-          type="date"
-          id="date"
-          value={defaultDate}
-          onChange={(e) => setDefaultDate(e.target.value)}
-        />
-        <input type="file" accept=".xlsx, .xls" onChange={handleFileChange} />
-        <button onClick={uploadFile}>Upload</button>
-        <button onClick={createNewRow}>New Row</button>
-        <button onClick={sendToVendor}>Send to Vendor</button>
-      </div>
+      <Paper sx={{ p: 3, mb: 4 }}>
+        <Grid container spacing={3} alignItems="center">
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="Select Date"
+              type="date"
+              value={defaultDate}
+              onChange={(e) => setDefaultDate(e.target.value)}
+              fullWidth
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
+          </Grid>
 
-      {orders.length > 0 && (
-        <div className="search-container">
-          <input
-            type="text"
-            placeholder="Search orders..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      )}
+          <Grid item xs={12} sm={4}>
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={handleFileChange}
+              style={{ width: "100%" }}
+            />
+          </Grid>
 
-      <div className="table-container">
-        {filteredOrders.length > 0 ? (
-          <table>
-            <thead>
-              <tr>
-                {headers.map((header) => (
-                  <th key={header.key}>{header.label}</th>
-                ))}
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredOrders.map((order, index) => (
-                <tr key={index}>
-                  {headers.map((header) => (
-                    <td key={header.key}>
-                      {editableRows[index] ? (
-                        <input
-                          type={header.key === "date" ? "date" : "text"}
-                          value={order[header.key]}
-                          onChange={(e) =>
-                            handleInputChange(index, header.key, e.target.value)
-                          }
-                        />
-                      ) : (
-                        order[header.key] || ""
-                      )}
-                    </td>
-                  ))}
-                  <td>
-                    <button onClick={() => toggleEditRow(index)}>
-                      {editableRows[index] ? "Save" : "Edit"}
-                    </button>
-                    <button onClick={() => deleteRow(index)} className="delete-btn">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          orders.length > 0 && <p>No matching results found.</p>
+          <Grid item xs={12} sm={4}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={uploadFile}
+              sx={{ width: "100%" }}
+            >
+              Upload
+            </Button>
+          </Grid>
+        </Grid>
+
+        <Grid container spacing={3} alignItems="center" sx={{ mt: 2 }}>
+          <Grid item xs={12} sm={4}>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={createNewRow}
+              sx={{ width: "100%" }}
+            >
+              New Row
+            </Button>
+          </Grid>
+
+          <Grid item xs={12} sm={4}>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={sendToVendor}
+              sx={{ width: "100%" }}
+            >
+              Send to Vendor
+            </Button>
+          </Grid>
+        </Grid>
+      </Paper>
+
+      <Paper sx={{ p: 3 }}>
+        {orders.length > 0 && (
+          <Grid container spacing={3} sx={{ mb: 2 }}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Search orders..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                fullWidth
+              />
+            </Grid>
+          </Grid>
         )}
-      </div>
-    </div>
+
+        {filteredOrders.length > 0 ? (
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  {headers.map((header) => (
+                    <TableCell key={header.key}>{header.label}</TableCell>
+                  ))}
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredOrders.map((order, index) => (
+                  <TableRow key={index}>
+                    {headers.map((header) => (
+                      <TableCell key={header.key}>
+                        {editableRows[index] ? (
+                          <TextField
+                            type={header.key === "date" ? "date" : "text"}
+                            value={order[header.key]}
+                            onChange={(e) =>
+                              handleInputChange(index, header.key, e.target.value)
+                            }
+                            fullWidth
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        ) : (
+                          order[header.key] || ""
+                        )}
+                      </TableCell>
+                    ))}
+                    <TableCell>
+                      <Button
+                        variant="outlined"
+                        onClick={() => toggleEditRow(index)}
+                        sx={{ mr: 1 }}
+                      >
+                        {editableRows[index] ? "Save" : "Edit"}
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={() => deleteRow(index)}
+                      >
+                        Delete
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        ) : (
+          <Typography>No matching results found.</Typography>
+        )}
+      </Paper>
+    </Box>
   );
 };
 

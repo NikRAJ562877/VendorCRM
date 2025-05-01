@@ -1,82 +1,139 @@
 import React, { useState, useEffect } from "react";
-import apiClient from "../api/auth"; // Importing apiClient
-import "../css/VendorOrders.css";
+import {
+  Box,
+  Toolbar,
+  Typography,
+  Button,
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Paper,
+  Stack,
+} from "@mui/material";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import apiClient from "../api/auth";
 
-const VendorOrders = () => {
+export default function VendorOrders() {
   const [vendorOrders, setVendorOrders] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Retrieve vendor info from sessionStorage (set during login)
     const user = JSON.parse(sessionStorage.getItem("user"));
     if (user && user.role === "vendor") {
-      const fetchVendorOrders = async () => {
+      (async () => {
         try {
           const res = await apiClient({
             endpoint: `/vendorOrders/${user.vendorId}`,
             method: "GET",
-            token: sessionStorage.getItem("authToken"), // Assuming token is stored in sessionStorage
+            token: sessionStorage.getItem("authToken"),
           });
-          setVendorOrders(res);
+          // If your client returns data on res.data, adjust accordingly:
+          setVendorOrders(res.orders ?? res.data?.orders ?? []);
         } catch (err) {
           console.error("Error fetching vendor orders:", err);
+          setVendorOrders([]);
         } finally {
           setLoading(false);
         }
-      };
-      fetchVendorOrders();
+      })();
     } else {
+      setVendorOrders([]);
       setLoading(false);
     }
   }, []);
 
-  if (loading) return <div className="loading-text">Loading vendor orders...</div>;
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.text("Vendor Orders", 14, 15);
+    autoTable(doc, {
+      startY: 20,
+      head: [["DLR CODE", "ZONE", "BO DLR NO.", "Part no.", "Order no.", "PO"]],
+      body: (vendorOrders || []).map((o) => [
+        o["DLR CODE"] || "N/A",
+        o["ZONE"] || "N/A",
+        o["BO DLR NO."] || "N/A",
+        o["Part no."] || "N/A",
+        o["Order no."] || "N/A",
+        o["PO"] || "N/A",
+      ]),
+    });
+    doc.save("vendor_orders.pdf");
+  };
+
+  const downloadExcel = () => {
+    const ws = XLSX.utils.json_to_sheet(vendorOrders || []);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "VendorOrders");
+    const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    saveAs(
+      new Blob([buf], {
+        type:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      }),
+      "vendor_orders.xlsx"
+    );
+  };
 
   return (
-    <div className="vendor-orders-container">
-      <h2>Vendor Orders</h2>
-      
-      {vendorOrders ? (
-        vendorOrders.orders && vendorOrders.orders.length > 0 ? (
-          <>
-            <div className="button-group">
-              <button className="button">Download PDF</button>
-              <button className="button">Download Excel</button>
-            </div>
+    <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+      <Toolbar />
+      <Typography variant="h5" gutterBottom>
+        Vendor Orders
+      </Typography>
 
-            <table className="orders-table">
-              <thead>
-                <tr>
-                  <th>DLR CODE</th>
-                  <th>ZONE</th>
-                  <th>BO DLR NO.</th>
-                  <th>Part no.</th>
-                  <th>Order no.</th>
-                  <th>PO</th>
-                </tr>
-              </thead>
-              <tbody>
-                {vendorOrders.orders.map((order, index) => (
-                  <tr key={index}>
-                    <td>{order["DLR CODE"] || "N/A"}</td>
-                    <td>{order["ZONE"] || "N/A"}</td>
-                    <td>{order["BO DLR NO."] || "N/A"}</td>
-                    <td>{order["Part no."] || "N/A"}</td>
-                    <td>{order["Order no."] || "N/A"}</td>
-                    <td>{order["PO"] || "N/A"}</td>
-                  </tr>
+      {(loading ? (
+        <Typography>Loading vendor orders…</Typography>
+      ) : (vendorOrders || []).length > 0 ? (
+        <>
+          <Stack direction="row" spacing={2} mb={2}>
+            <Button variant="contained" onClick={downloadPDF}>
+              Download PDF
+            </Button>
+            <Button variant="contained" onClick={downloadExcel}>
+              Download Excel
+            </Button>
+          </Stack>
+
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  {[
+                    "DLR CODE",
+                    "ZONE",
+                    "BO DLR NO.",
+                    "Part no.",
+                    "Order no.",
+                    "PO",
+                  ].map((h) => (
+                    <TableCell key={h}>{h}</TableCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {vendorOrders.map((o, idx) => (
+                  <TableRow key={idx}>
+                    <TableCell>{o["DLR CODE"] || "N/A"}</TableCell>
+                    <TableCell>{o["ZONE"] || "N/A"}</TableCell>
+                    <TableCell>{o["BO DLR NO."] || "N/A"}</TableCell>
+                    <TableCell>{o["Part no."] || "N/A"}</TableCell>
+                    <TableCell>{o["Order no."] || "N/A"}</TableCell>
+                    <TableCell>{o["PO"] || "N/A"}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </>
-        ) : (
-          <p className="no-orders-text">No orders received yet.</p>
-        )
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </>
       ) : (
-        <p className="no-orders-text">No orders found for your vendor ID.</p>
-      )}
-    </div>
+        <Typography>No orders found for your vendor ID.</Typography>
+      ))}
+    </Box>
   );
-};
-
-export default VendorOrders;
+}

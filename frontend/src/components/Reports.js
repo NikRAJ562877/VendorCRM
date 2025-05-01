@@ -240,6 +240,7 @@ const OrderForm = () => {
         <button
           onClick={addRow}
           className="bg-blue-600 text-white text-sm md:text-base px-4 py-2 md:px-6 md:py-2 rounded-md"
+          disabled={!selectedVendor || !selectedMonth} // Disable if no vendor/month selected
         >
           Add Row
         </button>

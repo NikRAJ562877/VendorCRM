@@ -1,22 +1,35 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import {
+  Box,
+  Toolbar,
+  Typography,
+  Grid,
+  Button,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
+} from "@mui/material";
 import Select from "react-select";
-import apiClient from "../api/auth"; // ✅ centralized apiClient
-import "../css/DlrMappingScreen.css";
+import apiClient from "../api/auth"; // centralized apiClient
 
-const DlrMappingScreen = () => {
+const productOptions = [
+  { value: "Ceramic Coating", label: "Ceramic Coating" },
+  { value: "Ultra Premium PPF", label: "Ultra Premium PPF" },
+];
+
+export default function DlrMappingScreen() {
   const [vendors, setVendors] = useState([]);
   const [selectedVendor, setSelectedVendor] = useState(null);
+  const [productCategory, setProductCategory] = useState(null);
   const [dlrCodeOptions, setDlrCodeOptions] = useState([]);
   const [selectedDlrCodes, setSelectedDlrCodes] = useState([]);
+  const [selectedDate, setSelectedDate] = useState("");
   const [mappings, setMappings] = useState([]);
   const [editId, setEditId] = useState(null);
-  const [selectedDate, setSelectedDate] = useState("");
-  const [productCategory, setProductCategory] = useState(null);
-
-  const productOptions = [
-    { value: "Ceramic Coating", label: "Ceramic Coating" },
-    { value: "Ultra Premium PPF", label: "Ultra Premium PPF" },
-  ];
 
   useEffect(() => {
     fetchVendors();
@@ -27,8 +40,8 @@ const DlrMappingScreen = () => {
     try {
       const res = await apiClient({ endpoint: "/dlr/vendors" });
       setVendors(res.map(v => ({ value: v.vendorId, label: v.vendorId })));
-    } catch (error) {
-      console.error("Error fetching vendors:", error);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -38,8 +51,8 @@ const DlrMappingScreen = () => {
         endpoint: `/dlr/unmapped-dlr-codes?product=${encodeURIComponent(product)}`
       });
       setDlrCodeOptions(res.map(code => ({ value: code, label: code })));
-    } catch (error) {
-      console.error("Error fetching unmapped DLR codes:", error);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -47,14 +60,14 @@ const DlrMappingScreen = () => {
     try {
       const res = await apiClient({ endpoint: "/dlr/mapping" });
       setMappings(res);
-    } catch (error) {
-      console.error("Error fetching mappings:", error);
+    } catch (err) {
+      console.error(err);
     }
   };
 
   const handleSubmit = async () => {
-    if (!selectedVendor || selectedDlrCodes.length === 0) {
-      alert("Please select a vendor and at least one DLR code.");
+    if (!selectedVendor || !productCategory || selectedDlrCodes.length === 0) {
+      alert("Vendor, product, and at least one DLR code are required.");
       return;
     }
 
@@ -71,130 +84,172 @@ const DlrMappingScreen = () => {
           method: "PUT",
           body: payload,
         });
-        alert("Mapping updated successfully!");
-        fetchDlrCodes(productCategory?.value);
+        alert("Mapping updated!");
       } else {
         await apiClient({
           endpoint: "/dlr/map",
           method: "POST",
           body: payload,
         });
-        alert("Mapping added successfully!");
+        alert("Mapping added!");
       }
-
+      setEditId(null);
       setSelectedDlrCodes([]);
       setSelectedVendor(null);
-      setEditId(null);
+      setProductCategory(null);
       setSelectedDate("");
       fetchMappings();
-    } catch (error) {
-      alert(error?.error || "Failed to map DLR Code.");
+      if (productCategory) fetchDlrCodes(productCategory.value);
+    } catch (err) {
+      console.error(err);
+      alert("Operation failed");
     }
   };
 
-  const handleEdit = (mapping) => {
-    setSelectedVendor(vendors.find(v => v.value === mapping.vendorId));
-    setSelectedDlrCodes(mapping.dlrCodes.map(code => ({ value: code, label: code })));
-    setSelectedDate(mapping.date || "");
-    setEditId(mapping._id);
+  const handleEdit = m => {
+    setEditId(m._id);
+    setSelectedVendor({ value: m.vendorId, label: m.vendorId });
+    setSelectedDate(m.date || "");
+    setSelectedDlrCodes(m.dlrCodes.map(code => ({ value: code, label: code })));
   };
 
   return (
-    <div className="dlr-mapping-container">
-      <h2>DLR Code to Vendor Mapping</h2>
+    <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+      <Toolbar />
+      <Typography variant="h5" gutterBottom>
+        DLR Code to Vendor Mapping
+      </Typography>
 
-      <div className="dlr-form-row">
-        <div className="dlr-form-group">
-          <label>Select Vendor:</label>
-          <Select
-            className="dlr-select-container"
-            options={vendors}
-            value={selectedVendor}
-            onChange={setSelectedVendor}
-            placeholder="Search & select vendor"
-            menuPlacement="auto"
-            menuPosition="fixed"
-          />
-        </div>
+      <Paper sx={{ p: 2, mb: 4 }}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Typography>Select Vendor</Typography>
+            <Select
+              options={vendors}
+              value={selectedVendor}
+              onChange={setSelectedVendor}
+              placeholder="Search & select"
+              menuPortalTarget={document.body} // Attach menu to body
+              styles={{
+                menuPortal: base => ({
+                  ...base,
+                  zIndex: 9999, // Ensure dropdown appears above all content
+                }),
+                menu: base => ({
+                  ...base,
+                  position: 'absolute', // Ensure it's positioned properly
+                  top: 'auto', // Let the menu position dynamically
+                  bottom: '100%', // Position above the input
+                  transform: 'translateY(-8px)', // Fine-tune dropdown position
+                }),
+              }}
+            />
+          </Grid>
 
-        <div className="dlr-form-group">
-          <label>Select Product Category:</label>
-          <Select
-            className="dlr-input-field"
-            options={productOptions}
-            value={productCategory}
-            onChange={(selectedOption) => {
-              setProductCategory(selectedOption);
-              fetchDlrCodes(selectedOption?.value);
-            }}
-            placeholder="Select Product Category"
-            menuPlacement="auto"
-            menuPosition="fixed"
-            menuPortalTarget={document.body}
-            styles={{ menuPortal: base => ({ ...base, zIndex: 1000 }) }}
-          />
-        </div>
+          <Grid item xs={12} sm={6} md={3}>
+            <Typography>Select Product Category</Typography>
+            <Select
+              options={productOptions}
+              value={productCategory}
+              onChange={opt => {
+                setProductCategory(opt);
+                fetchDlrCodes(opt.value);
+              }}
+              placeholder="Select product"
+              menuPortalTarget={document.body}
+              styles={{
+                menuPortal: base => ({
+                  ...base,
+                  zIndex: 9999,
+                }),
+                menu: base => ({
+                  ...base,
+                  position: 'absolute',
+                  top: 'auto',
+                  bottom: '100%',
+                  transform: 'translateY(-8px)',
+                }),
+              }}
+            />
+          </Grid>
 
-        <div className="dlr-form-group">
-          <label>Select DLR Codes:</label>
-          <Select
-            className="dlr-input-field"
-            options={dlrCodeOptions}
-            value={selectedDlrCodes}
-            onChange={setSelectedDlrCodes}
-            placeholder="Select DLR Codes"
-            isMulti
-            menuPlacement="auto"
-            menuPosition="fixed"
-            menuPortalTarget={document.body}
-            styles={{ menuPortal: base => ({ ...base, zIndex: 1000 }) }}
-          />
-        </div>
+          <Grid item xs={12} sm={6} md={3}>
+            <Typography>Select DLR Codes</Typography>
+            <Select
+              options={dlrCodeOptions}
+              value={selectedDlrCodes}
+              onChange={setSelectedDlrCodes}
+              isMulti
+              placeholder="Choose codes"
+              menuPortalTarget={document.body}
+              styles={{
+                menuPortal: base => ({
+                  ...base,
+                  zIndex: 9999,
+                }),
+                menu: base => ({
+                  ...base,
+                  position: 'absolute',
+                  top: 'auto',
+                  bottom: '100%',
+                  transform: 'translateY(-8px)',
+                }),
+              }}
+            />
+          </Grid>
 
-        <div className="dlr-form-group">
-          <label>Select Date:</label>
-          <input
-            type="date"
-            className="dlr-date-picker"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-          />
-        </div>
-      </div>
+          <Grid item xs={12} sm={6} md={3}>
+            <Typography>Select Date</Typography>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={e => setSelectedDate(e.target.value)}
+              style={{ width: "100%", padding: 8, boxSizing: "border-box" }}
+            />
+          </Grid>
 
-      <button onClick={handleSubmit} className="btn btn-primary">
-        {editId ? "Update Mapping" : "Map DLR Code"}
-      </button>
+          <Grid item xs={12}>
+            <Button variant="contained" onClick={handleSubmit}>
+              {editId ? "Update Mapping" : "Map DLR Code"}
+            </Button>
+          </Grid>
+        </Grid>
+      </Paper>
 
-      <h3>Existing Mappings</h3>
-      <div className="table-container">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Vendor ID</th>
-              <th>DLR Codes</th>
-              <th>Mapped Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {mappings.map((mapping) => (
-              <tr key={mapping._id}>
-                <td>{mapping.vendorId}</td>
-                <td>{mapping.dlrCodes.join(", ")}</td>
-                <td>{mapping.date || "Not Set"}</td>
-                <td>
-                  <button onClick={() => handleEdit(mapping)} className="btn btn-warning">
+      <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+        Existing Mappings
+      </Typography>
+
+      <TableContainer component={Paper} sx={{ mt: 4 }}>
+        <Table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <TableHead>
+            <TableRow>
+              <TableCell>Vendor ID</TableCell>
+              <TableCell>DLR Codes</TableCell>
+              <TableCell>Mapped Date</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {mappings.map(m => (
+              <TableRow key={m._id}>
+                <TableCell>{m.vendorId}</TableCell>
+                <TableCell>{m.dlrCodes.join(", ")}</TableCell>
+                <TableCell>{m.date || "Not Set"}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => handleEdit(m)}
+                  >
                     Edit
-                  </button>
-                </td>
-              </tr>
+                  </Button>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
   );
-};
-
-export default DlrMappingScreen;
+}

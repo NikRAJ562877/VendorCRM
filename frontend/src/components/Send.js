@@ -1,16 +1,43 @@
-import React, { useState, useEffect } from "react";
-import apiClient from "../api/auth"; // Import the apiClient
-import "../css/Send.css";
+import React, { useEffect, useState } from "react";
+import {
+  Box,
+  Toolbar,
+  Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Paper,
+  Grid,
+  TextField,
+  Button,
+  Stack,
+  Divider,
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add"; // ← Added import
+import apiClient from "../api/auth";
 
 const subcategoryOptions = [
-  "Ceramic coating - One year", "Ceramic Coating - Two year", "Ceramic Coating - Three year",
-  "Anti-Microbial treatment", "UV Protection", "Exterior Beautification", "Surface Refinement",
-  "Windshield Polishing", "Windshield Ceramic", "Head Light & Tail Light Polishing", "Logo Cleaning",
-  "Upholstery", "Germ Free", "AC Disinfectant", "Alloy Wheel Polishing", "Alloy Wheel Ceramic",
-  "Engine Coating"
+  "Ceramic coating - One year",
+  "Ceramic Coating - Two year",
+  "Ceramic Coating - Three year",
+  "Anti-Microbial treatment",
+  "UV Protection",
+  "Exterior Beautification",
+  "Surface Refinement",
+  "Windshield Polishing",
+  "Windshield Ceramic",
+  "Head Light & Tail Light Polishing",
+  "Logo Cleaning",
+  "Upholstery",
+  "Germ Free",
+  "AC Disinfectant",
+  "Alloy Wheel Polishing",
+  "Alloy Wheel Ceramic",
+  "Engine Coating",
 ];
 
-const Send = () => {
+export default function Send() {
   const [category, setCategory] = useState("");
   const [dealers, setDealers] = useState([]);
   const [pastReports, setPastReports] = useState([]);
@@ -19,217 +46,266 @@ const Send = () => {
   const vendorId = user.vendorId;
 
   useEffect(() => {
-    const fetchPastReports = async () => {
+    if (!vendorId) return;
+    (async () => {
       try {
-        const res = await apiClient({ endpoint: `/send/vendor-reports?vendorId=${vendorId}` });
-        setPastReports(res || []);
-      } catch (err) {
-        console.error("Failed to fetch past reports:", err);
+        const res = await apiClient({
+          endpoint: `/send/vendor-reports?vendorId=${vendorId}`,
+        });
+        setPastReports(Array.isArray(res) ? res : res.data ?? []);
+      } catch {
+        setPastReports([]);
       }
-    };
-
-    if (vendorId) fetchPastReports();
+    })();
   }, [vendorId]);
 
   const addDealerForm = () => {
-    setDealers((prev) => [
-      ...prev,
+    setDealers((d) => [
+      ...d,
       {
         id: Date.now(),
         dlrCode: "",
         dlrName: "",
         location: "",
         inputs: {},
-        rejectionReason: null
-      }
+        rejectionReason: null,
+      },
     ]);
   };
 
-  const removeDealerForm = (index) => {
-    const updated = [...dealers];
-    updated.splice(index, 1);
-    setDealers(updated);
-  };
+  const removeDealerForm = (i) =>
+    setDealers((d) => d.filter((_, idx) => idx !== i));
 
-  const updateDealerField = (index, field, value) => {
-    const updated = [...dealers];
-    updated[index][field] = value;
-    setDealers(updated);
-  };
+  const updateDealerField = (i, field, value) =>
+    setDealers((d) => {
+      const copy = [...d];
+      copy[i][field] = value;
+      return copy;
+    });
 
-  const updateDealerInputs = (index, subcategory, size, value) => {
-    const updated = [...dealers];
-    updated[index].inputs = {
-      ...updated[index].inputs,
-      [subcategory]: {
-        ...updated[index].inputs?.[subcategory],
-        [size]: Math.max(0, value)
-      }
-    };
-    setDealers(updated);
-  };
+  const updateDealerInputs = (i, sub, size, value) =>
+    setDealers((d) => {
+      const copy = [...d];
+      copy[i].inputs = {
+        ...copy[i].inputs,
+        [sub]: { ...copy[i].inputs[sub], [size]: Math.max(0, value) },
+      };
+      return copy;
+    });
 
-  const fetchDealerDetails = async (index, dlrCode) => {
-    if (!dlrCode) return;
-
+  const fetchDealerDetails = async (i, code) => {
+    if (!code) return;
     try {
-      const res = await apiClient({ endpoint: `/send/dealer-details/${dlrCode}` });
+      const res = await apiClient({
+        endpoint: `/send/dealer-details/${code}`,
+      });
       const { dlrName, Location, oldRejectedReport } = res;
-
-      const updated = [...dealers];
-      updated[index].dlrName = dlrName || "Not found";
-      updated[index].location = Location || "Not found";
-
-      if (oldRejectedReport) {
-        updated[index].inputs = oldRejectedReport.reportData || {};
-        updated[index].rejectionReason = oldRejectedReport.rejectionReason || null;
-      }
-
-      setDealers(updated);
-    } catch (err) {
-      console.error("Error fetching dealer details", err);
-      const updated = [...dealers];
-      updated[index].dlrName = "Not found";
-      updated[index].location = "Not found";
-      setDealers(updated);
+      setDealers((d) => {
+        const copy = [...d];
+        copy[i].dlrName = dlrName || "Not found";
+        copy[i].location = Location || "Not found";
+        if (oldRejectedReport) {
+          copy[i].inputs = oldRejectedReport.reportData || {};
+          copy[i].rejectionReason = oldRejectedReport.rejectionReason;
+        }
+        return copy;
+      });
+    } catch {
+      setDealers((d) => {
+        const copy = [...d];
+        copy[i].dlrName = "Not found";
+        copy[i].location = "Not found";
+        return copy;
+      });
     }
   };
 
   const handleSubmit = async () => {
     if (!vendorId) {
-      alert("Vendor ID not found. Please log in.");
+      alert("Vendor ID not found.");
       return;
     }
-
     for (const dealer of dealers) {
       if (!dealer.dlrCode || !dealer.dlrName || !dealer.location) {
-        alert("Please fill all required fields");
+        alert("Fill all required fields.");
         return;
       }
-
-      const payload = {
-        company: category,
-        dealerCode: dealer.dlrCode,
-        dealerName: dealer.dlrName,
-        location: dealer.location,
-        reportData: dealer.inputs,
-        vendorId: vendorId
-      };
-
       try {
         await apiClient({
           endpoint: "/send/submit-report",
           method: "POST",
-          body: payload
+          body: {
+            company: category,
+            dealerCode: dealer.dlrCode,
+            dealerName: dealer.dlrName,
+            location: dealer.location,
+            reportData: dealer.inputs,
+            vendorId,
+          },
         });
-        console.log("Submitted successfully");
-      } catch (error) {
-        console.error("Submission error:", error);
+      } catch (e) {
+        console.error(e);
       }
     }
-
     setCategory("");
     setDealers([]);
   };
 
   return (
-    <div className="send-wrapper">
-      <div className="send-container">
-        <h2>Send Reports</h2>
+    <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+      <Toolbar />
+      <Typography variant="h5" gutterBottom>
+        Send Reports
+      </Typography>
 
-        <div className="form-row">
-          <label>Company:</label>
-          <select value={category} onChange={(e) => setCategory(e.target.value)}>
-            <option value="">-- Select Company --</option>
-            <option value="HYUNDAI">HYUNDAI</option>
-            <option value="VW SKODA">VW SKODA</option>
-          </select>
-        </div>
+      <FormControl sx={{ mb: 3, minWidth: 240 }}>
+        <InputLabel>Company</InputLabel>
+        <Select
+          value={category}
+          label="Company"
+          onChange={(e) => setCategory(e.target.value)}
+        >
+          <MenuItem value="">
+            <em>Select Company</em>
+          </MenuItem>
+          <MenuItem value="HYUNDAI">HYUNDAI</MenuItem>
+          <MenuItem value="VW SKODA">VW SKODA</MenuItem>
+        </Select>
+      </FormControl>
 
-        {dealers.map((dealer, index) => (
-          <div className="dealer-form" key={dealer.id}>
-            <input
-              placeholder="Dealer Code"
-              value={dealer.dlrCode}
-              onChange={(e) => {
-                updateDealerField(index, "dlrCode", e.target.value);
-                fetchDealerDetails(index, e.target.value);
-              }}
-            />
-            <input placeholder="Dealer Name" value={dealer.dlrName} disabled />
-            <input placeholder="Location" value={dealer.location} disabled />
+      {dealers.map((dealer, i) => (
+        <Paper key={dealer.id} sx={{ p: 2, mb: 3 }}>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} sm={3}>
+              <TextField
+                label="Dealer Code"
+                value={dealer.dlrCode}
+                onChange={(e) => {
+                  updateDealerField(i, "dlrCode", e.target.value);
+                  fetchDealerDetails(i, e.target.value);
+                }}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <TextField
+                label="Dealer Name"
+                value={dealer.dlrName}
+                disabled
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <TextField
+                label="Location"
+                value={dealer.location}
+                disabled
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={() => removeDealerForm(i)}
+              >
+                Remove
+              </Button>
+            </Grid>
 
             {dealer.rejectionReason && (
-              <div className="rejection-box">
-                <strong>Rejected:</strong> {dealer.rejectionReason}
-              </div>
+              <Grid item xs={12}>
+                <Typography color="error">
+                  Rejected: {dealer.rejectionReason}
+                </Typography>
+              </Grid>
             )}
 
             {subcategoryOptions.map((sub) => (
-              <div key={sub} className="subcategory-row">
-                <label>{sub}</label>
-                <input
-                  type="number"
-                  placeholder="S"
-                  value={dealer.inputs?.[sub]?.S || ""}
-                  onChange={(e) => updateDealerInputs(index, sub, "S", parseInt(e.target.value))}
-                />
-                <input
-                  type="number"
-                  placeholder="M"
-                  value={dealer.inputs?.[sub]?.M || ""}
-                  onChange={(e) => updateDealerInputs(index, sub, "M", parseInt(e.target.value))}
-                />
-                <input
-                  type="number"
-                  placeholder="L"
-                  value={dealer.inputs?.[sub]?.L || ""}
-                  onChange={(e) => updateDealerInputs(index, sub, "L", parseInt(e.target.value))}
-                />
-              </div>
+              <Grid
+                item
+                xs={12}
+                sm={4}
+                md={3}
+                key={sub}
+                component={Paper}
+                variant="outlined"
+                sx={{ p: 2, minHeight: 120 }}
+              >
+                <Typography variant="subtitle2" gutterBottom>
+                  {sub}
+                </Typography>
+                <Stack direction="row" spacing={1}>
+                  {["S", "M", "L"].map((size) => (
+                    <TextField
+                      key={size}
+                      label={size}
+                      type="number"
+                      value={dealer.inputs?.[sub]?.[size] ?? ""}
+                      onChange={(e) =>
+                        updateDealerInputs(
+                          i,
+                          sub,
+                          size,
+                          parseInt(e.target.value, 10)
+                        )
+                      }
+                      sx={{ width: 60 }}
+                    />
+                  ))}
+                </Stack>
+              </Grid>
             ))}
+          </Grid>
+        </Paper>
+      ))}
 
-            <button onClick={() => removeDealerForm(index)}>Remove</button>
-          </div>
-        ))}
+      <Stack direction="row" spacing={2} mb={4}>
+        <Button variant="outlined" onClick={addDealerForm} startIcon={<AddIcon />}>
+          Add Dealer
+        </Button>
+        <Button variant="contained" onClick={handleSubmit}>
+          Submit Report
+        </Button>
+      </Stack>
 
-        <button onClick={addDealerForm}>+ Add Dealer</button>
-        <button onClick={handleSubmit}>Submit Report</button>
-      </div>
+      <Divider sx={{ mb: 3 }} />
 
-      <div className="submitted-container">
-        <h2>Submitted Reports</h2>
-        {pastReports.length === 0 ? (
-          <p>No reports submitted yet.</p>
-        ) : (
-          pastReports.map((report, i) => (
-            <div key={i} className="submitted-report">
-              <h4>{report.dealerName} ({report.dealerCode})</h4>
-              <p><strong>Location:</strong> {report.location}</p>
-              <p><strong>Status:</strong> {report.status}</p>
-
-              {report.status === "Rejected" && (
-                <p className="rejection-reason">
-                  <strong>Rejection Reason:</strong> {report.rejectionReason}
-                </p>
-              )}
-
-              <div className="report-data">
-                {Object.entries(report.reportData || {}).map(([subcat, sizes]) => (
-                  <div key={subcat} className="report-row">
-                    <strong>{subcat}:</strong>
-                    {Object.entries(sizes).map(([size, qty]) => (
-                      <span key={size}> {size}: {qty} </span>
+      <Typography variant="h6" gutterBottom>
+        Submitted Reports
+      </Typography>
+      {pastReports.length === 0 ? (
+        <Typography>No reports submitted yet.</Typography>
+      ) : (
+        pastReports.map((rpt, idx) => (
+          <Paper key={idx} sx={{ p: 2, mb: 2 }}>
+            <Typography variant="subtitle1">
+              {rpt.dealerName} ({rpt.dealerCode})
+            </Typography>
+            <Typography>Location: {rpt.location}</Typography>
+            <Typography>Status: {rpt.status}</Typography>
+            {rpt.status === "Rejected" && (
+              <Typography color="error">
+                Reason: {rpt.rejectionReason}
+              </Typography>
+            )}
+            <Box mt={1}>
+              {Object.entries(rpt.reportData || {}).map(([sub, sizes]) => (
+                <Box key={sub} sx={{ mb: 1 }}>
+                  <Typography fontWeight="bold">{sub}</Typography>
+                  <Stack direction="row" spacing={2}>
+                    {Object.entries(sizes).map(([sz, qty]) => (
+                      <Typography key={sz}>
+                        {sz}: {qty}
+                      </Typography>
                     ))}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
+                  </Stack>
+                </Box>
+              ))}
+            </Box>
+          </Paper>
+        ))
+      )}
+    </Box>
   );
-};
-
-export default Send;
+}

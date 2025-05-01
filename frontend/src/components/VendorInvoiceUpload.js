@@ -1,112 +1,160 @@
 import React, { useState } from "react";
-import apiClient from "../api/auth"; // Importing apiClient
-import "../css/VendorInvoiceUpload.css";
+import {
+  Box,
+  Toolbar,
+  Typography,
+  Paper,
+  TextField,
+  IconButton,
+  Button,
+  Stack,
+} from "@mui/material";
+import { Delete as DeleteIcon, Add as AddIcon, Upload as UploadIcon } from "@mui/icons-material";
+import apiClient from "../api/auth";
 
-const VendorInvoiceUpload = () => {
+export default function VendorInvoiceUpload() {
   const [invoices, setInvoices] = useState([]);
-
-  // ✅ Fetch vendorId from sessionStorage
   const vendorId = JSON.parse(sessionStorage.getItem("user"))?.vendorId || null;
 
   const addInvoice = () => {
-    setInvoices([...invoices, { invoiceNo: "", date: "", month: "", amount: "", file: null }]);
+    setInvoices((prev) => [
+      ...prev,
+      { invoiceNo: "", date: "", month: "", amount: "", file: [] },
+    ]);
   };
 
-  const deleteInvoice = (index) => {
-    const updatedInvoices = invoices.filter((_, i) => i !== index);
-    setInvoices(updatedInvoices);
+  const deleteInvoice = (idx) => {
+    setInvoices((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const handleChange = (index, event) => {
-    const { name, value, files } = event.target;
-    const updatedInvoices = [...invoices];
-  
-    if (name === "file") {
-      updatedInvoices[index][name] = files ? Array.from(files) : [];
-    } else {
-      updatedInvoices[index][name] = value;
-    }
-  
-    setInvoices(updatedInvoices);
+  const handleChange = (idx, e) => {
+    const { name, value, files } = e.target;
+    setInvoices((prev) => {
+      const copy = [...prev];
+      if (name === "file") copy[idx][name] = Array.from(files);
+      else copy[idx][name] = value;
+      return copy;
+    });
   };
-  
 
-  // ✅ Calculate Total Amount Dynamically
-  const totalAmount = invoices.reduce((sum, invoice) => sum + (parseFloat(invoice.amount) || 0), 0);
+  const totalAmount = invoices.reduce(
+    (sum, inv) => sum + (parseFloat(inv.amount) || 0),
+    0
+  );
 
   const handleSubmit = async () => {
     if (!vendorId) {
-      alert("Vendor ID is missing. Please log in again.");
+      alert("Missing vendor ID. Please log in again.");
       return;
     }
-  
+
     const formData = new FormData();
-  
-    // ✅ Attach invoice data
-    const invoiceData = invoices.map(({ file, ...invoice }) => ({
-      ...invoice,
+    const dataOnly = invoices.map(({ file, ...rest }) => ({
+      ...rest,
       vendorId,
     }));
-    formData.append("invoices", JSON.stringify(invoiceData));
-  
-    // ✅ Attach files with indexed keys
-    invoices.forEach((invoice, index) => {
-      if (invoice.file) {
-        invoice.file.forEach((file) => {
-          formData.append(`files-${index}`, file); // ✅ Send indexed file field names
-          console.log(`📤 Appending File:`, file.name, `as files-${index}`);
-        });
-      }
-    });
-  
-    console.log("📦 FormData Content:");
-    for (let pair of formData.entries()) {
-      console.log(pair[0], pair[1]);
-    }
-  
+    formData.append("invoices", JSON.stringify(dataOnly));
+    invoices.forEach((inv, i) =>
+      inv.file.forEach((f) => formData.append(`files-${i}`, f))
+    );
+
     try {
-      // Use apiClient for making the POST request
-      const response = await apiClient({
+      const res = await apiClient({
         endpoint: "/vendor-invoices/upload",
         method: "POST",
         body: formData,
-        token: sessionStorage.getItem("authToken"), // Assuming token is stored in sessionStorage
+        token: sessionStorage.getItem("authToken"),
       });
-  
-      alert("Invoices uploaded successfully");
-      console.log("✅ Response Data:", response.data);
-      setInvoices([]); // Clear form on success
-    } catch (error) {
-      console.error("❌ Upload failed:", error.response?.data || error.message);
-      alert(`Failed to upload invoices: ${error.response?.data?.error || error.message}`);
+      alert("Invoices uploaded!");
+      setInvoices([]);
+    } catch (err) {
+      console.error(err);
+      alert("Upload failed: " + (err.response?.data?.error || err.message));
     }
   };
 
   return (
-    <div className="vendor-invoice-container">
-      <h2>Upload Invoices</h2>
-      {invoices.map((invoice, index) => (
-        <div key={index} className="vendor-invoice-box">
-          <input type="text" name="invoiceNo" placeholder="Invoice No." value={invoice.invoiceNo} onChange={(e) => handleChange(index, e)} />
-          <input type="date" name="date" value={invoice.date} onChange={(e) => handleChange(index, e)} />
-          <input type="month" name="month" value={invoice.month} onChange={(e) => handleChange(index, e)} />
-          <input type="number" name="amount" placeholder="Amount" value={invoice.amount} onChange={(e) => handleChange(index, e)} />
-          <input type="file" name="file" multiple onChange={(e) => handleChange(index, e)} />
-          <button className="delete-btn" onClick={() => deleteInvoice(index)}>❌ Delete</button>
-        </div>
-      ))}
+    <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+      <Toolbar />
+      <Typography variant="h5" gutterBottom>
+        Upload Invoices
+      </Typography>
 
-      {/* ✅ Show Total Amount */}
-      <div className="vendor-invoice-total">
-        <strong>Total Amount: </strong> {totalAmount.toLocaleString()}  
-      </div>
+      <Stack spacing={2} mb={2}>
+        {invoices.map((inv, idx) => (
+          <Paper key={idx} sx={{ p: 2 }}>
+            <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
+              <TextField
+                label="Invoice No."
+                name="invoiceNo"
+                value={inv.invoiceNo}
+                onChange={(e) => handleChange(idx, e)}
+              />
+              <TextField
+                label="Date"
+                type="date"
+                name="date"
+                value={inv.date}
+                onChange={(e) => handleChange(idx, e)}
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                label="Month"
+                type="month"
+                name="month"
+                value={inv.month}
+                onChange={(e) => handleChange(idx, e)}
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                label="Amount"
+                type="number"
+                name="amount"
+                value={inv.amount}
+                onChange={(e) => handleChange(idx, e)}
+              />
+              <Button variant="contained" component="label">
+                Select Files
+                <input
+                  type="file"
+                  name="file"
+                  hidden
+                  multiple
+                  onChange={(e) => handleChange(idx, e)}
+                />
+              </Button>
+              <IconButton
+                color="error"
+                onClick={() => deleteInvoice(idx)}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Stack>
+          </Paper>
+        ))}
+      </Stack>
 
-      <div className="vendor-invoice-buttons">
-        <button className="vendor-invoice-add-btn" onClick={addInvoice}>➕ Add Invoice</button>
-        <button className="vendor-invoice-submit-btn" onClick={handleSubmit}>📤 Submit Invoices</button>
-      </div>
-    </div>
+      <Typography variant="subtitle1" gutterBottom>
+        Total Amount: {totalAmount.toLocaleString()}
+      </Typography>
+
+      <Stack direction="row" spacing={2}>
+        <Button
+          variant="outlined"
+          startIcon={<AddIcon />}
+          onClick={addInvoice}
+        >
+          Add Invoice
+        </Button>
+        <Button
+          variant="contained"
+          startIcon={<UploadIcon />}
+          onClick={handleSubmit}
+          disabled={invoices.length === 0}
+        >
+          Submit Invoices
+        </Button>
+      </Stack>
+    </Box>
   );
-};
-
-export default VendorInvoiceUpload;
+}

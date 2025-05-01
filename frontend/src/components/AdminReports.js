@@ -1,39 +1,51 @@
 import React, { useEffect, useState } from "react";
-import apiClient from "../api/auth"; // Adjust the path if needed
-import "../css/AdminReports.css";
+import {
+  Box,
+  Toolbar,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  CardActions,
+  Button,
+  Collapse,
+  IconButton,
+  CircularProgress,
+} from "@mui/material";
+import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
+import apiClient from "../api/auth";
 
-const AdminReports = () => {
-  const [reports, setReports] = useState([]);
+export default function AdminReports() {
+  const [reports, setReports] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
 
   useEffect(() => {
-    const fetchReports = async () => {
+    (async () => {
       try {
         const data = await apiClient({ endpoint: "/send/admin/reports" });
-        setReports(data);
-      } catch (error) {
-        console.error("Failed to fetch reports", error);
+        setReports(Array.isArray(data) ? data : data.data ?? []);
+      } catch (err) {
+        console.error("Failed to fetch reports", err);
+        setReports([]);
       }
-    };
-
-    fetchReports();
+    })();
   }, []);
 
   const handleAction = async (id, action) => {
-    if (!window.confirm(`Are you sure you want to ${action} this report?`)) return;
-
+    if (!window.confirm(`Are you sure you want to ${action} this report?`))
+      return;
     const payload = { status: action };
     if (action === "Rejected") {
-      payload.rejectionReason = prompt("Enter reason for rejection:");
-      if (!payload.rejectionReason) return;
+      const reason = prompt("Enter reason for rejection:");
+      if (!reason) return;
+      payload.rejectionReason = reason;
     }
-
     try {
       await apiClient({
         endpoint: `/send/report-status/${id}`,
         method: "PATCH",
         body: payload,
       });
-      alert(`Report ${action}ed`);
       setReports((prev) =>
         prev.map((r) =>
           r._id === id
@@ -46,60 +58,94 @@ const AdminReports = () => {
     }
   };
 
-  return (
-    <div className="admin-reports-container">
-      <h2>Submitted Dealer Reports</h2>
-      {reports.length === 0 ? (
-        <p>No reports submitted yet.</p>
-      ) : (
-        <div className="card-grid">
-          {reports.map((report) => (
-            <div className="report-card" key={report._id}>
-              <h3>{report.company}</h3>
-              <p><strong>Dealer Code:</strong> {report.dealerCode}</p>
-              <p><strong>Dealer Name:</strong> {report.dealerName}</p>
-              <p><strong>Location:</strong> {report.location}</p>
-              <p><strong>Date:</strong> {new Date(report.createdAt).toLocaleString()}</p>
-              <p><strong>Status:</strong> {report.status || "Pending"}</p>
-              {report.status === "Rejected" && (
-                <p style={{ color: "red" }}><strong>Reason:</strong> {report.rejectionReason}</p>
-              )}
-              <details>
-                <summary>View Report Data</summary>
-                <ul>
-                  {report.reportData && Object.keys(report.reportData).length > 0 ? (
-                    Object.entries(report.reportData).map(([category, sizes]) => (
-                      <li key={category}>
-                        <strong>{category}</strong>: {`S: ${sizes.S || 0}, M: ${sizes.M || 0}, L: ${sizes.L || 0}`}
-                      </li>
-                    ))
-                  ) : (
-                    <li>No report data available</li>
-                  )}
-                </ul>
-              </details>
-              <div className="action-buttons">
-                <button
-                  className="accept"
-                  onClick={() => handleAction(report._id, "Accepted")}
-                  disabled={report.status === "Accepted"}
-                >
-                  Accept
-                </button>
-                <button
-                  className="reject"
-                  onClick={() => handleAction(report._id, "Rejected")}
-                  disabled={report.status === "Rejected"}
-                >
-                  Reject
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
+  if (reports === null) {
+    return (
+      <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8, textAlign: "center" }}>
+        <Toolbar />
+        <CircularProgress />
+      </Box>
+    );
+  }
 
-export default AdminReports;
+  return (
+    <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+      <Toolbar />
+      <Typography variant="h5" gutterBottom>
+        Submitted Dealer Reports
+      </Typography>
+
+      {reports.length === 0 ? (
+        <Typography>No reports submitted yet.</Typography>
+      ) : (
+        <Grid container spacing={2}>
+          {reports.map((report) => (
+            <Grid item xs={12} sm={6} md={4} key={report._id}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6">{report.company}</Typography>
+                  <Typography>Dealer Code: {report.dealerCode}</Typography>
+                  <Typography>Dealer Name: {report.dealerName}</Typography>
+                  <Typography>Location: {report.location}</Typography>
+                  <Typography>
+                    Date: {new Date(report.createdAt).toLocaleString()}
+                  </Typography>
+                  <Typography>Status: {report.status || "Pending"}</Typography>
+                  {report.status === "Rejected" && (
+                    <Typography color="error">
+                      Reason: {report.rejectionReason}
+                    </Typography>
+                  )}
+                </CardContent>
+                <CardActions disableSpacing>
+                  <Button
+                    size="small"
+                    onClick={() => handleAction(report._id, "Accepted")}
+                    disabled={report.status === "Accepted"}
+                  >
+                    Accept
+                  </Button>
+                  <Button
+                    size="small"
+                    onClick={() => handleAction(report._id, "Rejected")}
+                    disabled={report.status === "Rejected"}
+                  >
+                    Reject
+                  </Button>
+                  <IconButton
+                    onClick={() =>
+                      setExpandedId(expandedId === report._id ? null : report._id)
+                    }
+                    sx={{
+                      marginLeft: "auto",
+                      transform:
+                        expandedId === report._id ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.2s",
+                    }}
+                  >
+                    <ExpandMoreIcon />
+                  </IconButton>
+                </CardActions>
+                <Collapse in={expandedId === report._id} timeout="auto" unmountOnExit>
+                  <CardContent>
+                    {report.reportData && Object.keys(report.reportData).length > 0 ? (
+                      Object.entries(report.reportData).map(([category, sizes]) => (
+                        <Box key={category} sx={{ mb: 1 }}>
+                          <Typography variant="subtitle2">{category}</Typography>
+                          <Typography>
+                            S: {sizes.S || 0}, M: {sizes.M || 0}, L: {sizes.L || 0}
+                          </Typography>
+                        </Box>
+                      ))
+                    ) : (
+                      <Typography>No report data available</Typography>
+                    )}
+                  </CardContent>
+                </Collapse>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
+    </Box>
+  );
+}
