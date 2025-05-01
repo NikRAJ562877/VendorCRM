@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import apiClient from '../api/auth'; // Adjust the path if needed
 import '../css/Login.css'; // Reuse existing styling or create new CSS
 
 const AdminSignup = () => {
@@ -13,15 +13,18 @@ const AdminSignup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/admins', { adminId, password });
-      setMessage(res.data.message);
+      const res = await apiClient({
+        endpoint: '/admins',
+        method: 'POST',
+        body: { adminId, password },
+      });
+      setMessage(res.message);
       setError('');
-      // Optionally navigate to login after a delay:
       setTimeout(() => {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setError(err.response?.data?.error || 'Signup failed');
+      setError(err.error || 'Signup failed');
       setMessage('');
     }
   };

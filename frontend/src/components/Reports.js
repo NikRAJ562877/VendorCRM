@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import apiClient from "../api/auth"; // Importing the apiClient
 
 const OrderForm = () => {
   const [categories] = useState(["Ultra Premium PPF", "Ceramic Coating"]);
@@ -12,8 +13,7 @@ const OrderForm = () => {
   useEffect(() => {
     const fetchVendors = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/dlr/vendors");
-        const data = await res.json();
+        const data = await apiClient({ endpoint: "/dlr/vendors" });
         const filtered = data
           .filter((v) => v.role === "vendor")
           .map((v) => ({ value: v.vendorId, label: v.vendorId }));
@@ -25,8 +25,7 @@ const OrderForm = () => {
 
     const fetchProducts = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/products/getProducts");
-        const data = await res.json();
+        const data = await apiClient({ endpoint: "/products/getProducts" });
         setProducts(data);
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -99,25 +98,23 @@ const OrderForm = () => {
     if (rows.length === 0) return alert("Please add at least one order row.");
 
     try {
-      const res = await fetch("http://localhost:5000/api/reports", {
+      const response = await apiClient({
+        endpoint: "/reports",
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: {
           vendor: selectedVendor,
           month: selectedMonth,
           reports: rows,
           finalTotal,
-        }),
+        },
       });
 
-      if (res.ok) {
+      if (response) {
         alert("Report saved successfully!");
         setRows([]);
         setFinalTotal(0);
         setSelectedVendor("");
         setSelectedMonth("");
-      } else {
-        console.error("Error saving report:", await res.text());
       }
     } catch (error) {
       console.error("Error saving report:", error);

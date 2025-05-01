@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import apiClient from "../api/auth"; // Importing apiClient
 import "../css/VendorInvoiceUpload.css";
 
 const VendorInvoiceUpload = () => {
@@ -65,8 +65,12 @@ const VendorInvoiceUpload = () => {
     }
   
     try {
-      const response = await axios.post("http://localhost:5000/api/vendor-invoices/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      // Use apiClient for making the POST request
+      const response = await apiClient({
+        endpoint: "/vendor-invoices/upload",
+        method: "POST",
+        body: formData,
+        token: sessionStorage.getItem("authToken"), // Assuming token is stored in sessionStorage
       });
   
       alert("Invoices uploaded successfully");
@@ -77,9 +81,6 @@ const VendorInvoiceUpload = () => {
       alert(`Failed to upload invoices: ${error.response?.data?.error || error.message}`);
     }
   };
-  
-  
-  
 
   return (
     <div className="vendor-invoice-container">

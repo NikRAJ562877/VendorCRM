@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import Select from "react-select";
+import apiClient from "../api/auth"; // ✅ centralized apiClient
 import "../css/DlrMappingScreen.css";
 
 const DlrMappingScreen = () => {
@@ -11,23 +11,22 @@ const DlrMappingScreen = () => {
   const [mappings, setMappings] = useState([]);
   const [editId, setEditId] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
-
-  useEffect(() => {
-    fetchVendors();
-    //fetchDlrCodes();
-    fetchMappings();
-  }, []);
   const [productCategory, setProductCategory] = useState(null);
 
   const productOptions = [
     { value: "Ceramic Coating", label: "Ceramic Coating" },
     { value: "Ultra Premium PPF", label: "Ultra Premium PPF" },
-    // add more if needed
   ];
+
+  useEffect(() => {
+    fetchVendors();
+    fetchMappings();
+  }, []);
+
   const fetchVendors = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/dlr/vendors");
-      setVendors(res.data.map(v => ({ value: v.vendorId, label: v.vendorId })));
+      const res = await apiClient({ endpoint: "/dlr/vendors" });
+      setVendors(res.map(v => ({ value: v.vendorId, label: v.vendorId })));
     } catch (error) {
       console.error("Error fetching vendors:", error);
     }
@@ -35,10 +34,10 @@ const DlrMappingScreen = () => {
 
   const fetchDlrCodes = async (product) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/dlr/unmapped-dlr-codes`, {
-        params: { product }
+      const res = await apiClient({
+        endpoint: `/dlr/unmapped-dlr-codes?product=${encodeURIComponent(product)}`
       });
-      setDlrCodeOptions(res.data.map(code => ({ value: code, label: code })));
+      setDlrCodeOptions(res.map(code => ({ value: code, label: code })));
     } catch (error) {
       console.error("Error fetching unmapped DLR codes:", error);
     }
@@ -46,8 +45,8 @@ const DlrMappingScreen = () => {
 
   const fetchMappings = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/dlr/mapping");
-      setMappings(res.data);
+      const res = await apiClient({ endpoint: "/dlr/mapping" });
+      setMappings(res);
     } catch (error) {
       console.error("Error fetching mappings:", error);
     }
@@ -59,19 +58,27 @@ const DlrMappingScreen = () => {
       return;
     }
 
-    try {
-      const payload = {
-        vendorId: selectedVendor.value,
-        dlrCodes: selectedDlrCodes.map(d => d.value),
-        date: selectedDate,
-      };
+    const payload = {
+      vendorId: selectedVendor.value,
+      dlrCodes: selectedDlrCodes.map(d => d.value),
+      date: selectedDate,
+    };
 
+    try {
       if (editId) {
-        await axios.put(`http://localhost:5000/api/dlr/mappings/${editId}`, payload);
+        await apiClient({
+          endpoint: `/dlr/mappings/${editId}`,
+          method: "PUT",
+          body: payload,
+        });
         alert("Mapping updated successfully!");
-        fetchDlrCodes();
+        fetchDlrCodes(productCategory?.value);
       } else {
-        await axios.post("http://localhost:5000/api/dlr/map", payload);
+        await apiClient({
+          endpoint: "/dlr/map",
+          method: "POST",
+          body: payload,
+        });
         alert("Mapping added successfully!");
       }
 
@@ -81,7 +88,7 @@ const DlrMappingScreen = () => {
       setSelectedDate("");
       fetchMappings();
     } catch (error) {
-      alert(error.response?.data?.error || "Failed to map DLR Code.");
+      alert(error?.error || "Failed to map DLR Code.");
     }
   };
 
@@ -109,23 +116,25 @@ const DlrMappingScreen = () => {
             menuPosition="fixed"
           />
         </div>
+
         <div className="dlr-form-group">
-  <label>Select Product Category:</label>
-  <Select
-    className="dlr-input-field"
-    options={productOptions}
-    value={productCategory}
-    onChange={(selectedOption) => {
-      setProductCategory(selectedOption);
-      fetchDlrCodes(selectedOption?.value);
-    }}
-    placeholder="Select Product Category"
-    menuPlacement="auto"
-    menuPosition="fixed"
-    menuPortalTarget={document.body}
-    styles={{ menuPortal: base => ({ ...base, zIndex: 1000 }) }}
-  />
-</div>
+          <label>Select Product Category:</label>
+          <Select
+            className="dlr-input-field"
+            options={productOptions}
+            value={productCategory}
+            onChange={(selectedOption) => {
+              setProductCategory(selectedOption);
+              fetchDlrCodes(selectedOption?.value);
+            }}
+            placeholder="Select Product Category"
+            menuPlacement="auto"
+            menuPosition="fixed"
+            menuPortalTarget={document.body}
+            styles={{ menuPortal: base => ({ ...base, zIndex: 1000 }) }}
+          />
+        </div>
+
         <div className="dlr-form-group">
           <label>Select DLR Codes:</label>
           <Select

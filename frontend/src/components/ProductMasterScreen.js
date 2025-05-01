@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
-import "../css/ProductMasterScreen.css"; // Import separate CSS file
+import apiClient from "../api/auth"; // centralized API client
+import "../css/ProductMasterScreen.css";
 
 const ProductMaster = () => {
   const [category, setCategory] = useState("");
@@ -9,7 +9,7 @@ const ProductMaster = () => {
   const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
 
-  const categories = ["Ultra Premium PPF", "Ceramic Coating"]; // Dropdown options
+  const categories = ["Ultra Premium PPF", "Ceramic Coating"];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,21 +20,24 @@ const ProductMaster = () => {
     }
 
     try {
-      const response = await axios.post("http://localhost:5000/api/products/add-product", {
-        category,
-        partNo,
-        productName,
-        amount: Number(amount),
+      const response = await apiClient({
+        endpoint: "/products/add-product",
+        method: "POST",
+        body: {
+          category,
+          partNo,
+          productName,
+          amount: Number(amount),
+        },
       });
 
-      
-      setMessage(response.data.message);
+      setMessage(response.message || "Product saved successfully");
       setCategory("");
       setPartNo("");
       setProductName("");
       setAmount("");
     } catch (error) {
-      setMessage(error.response?.data?.message || "Error saving product");
+      setMessage(error.message || "Error saving product");
     }
   };
 
@@ -55,13 +58,28 @@ const ProductMaster = () => {
         </select>
 
         <label>Part No.:</label>
-        <input type="text" value={partNo} onChange={(e) => setPartNo(e.target.value)} required />
+        <input
+          type="text"
+          value={partNo}
+          onChange={(e) => setPartNo(e.target.value)}
+          required
+        />
 
         <label>Product Name:</label>
-        <input type="text" value={productName} onChange={(e) => setProductName(e.target.value)} required />
+        <input
+          type="text"
+          value={productName}
+          onChange={(e) => setProductName(e.target.value)}
+          required
+        />
 
         <label>Amount:</label>
-        <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} required />
+        <input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          required
+        />
 
         <button type="submit">Save Product</button>
       </form>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import apiClient from "../api/auth"; // centralized API client
 import "../css/ReportHistory.css";
 
 const ReportHistory = () => {
@@ -13,7 +13,7 @@ const ReportHistory = () => {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/reporthistory");
+        const response = await apiClient({ endpoint: "/reporthistory", method: "GET" });
         setReports(response.data);
         setFilteredReports(response.data);
       } catch (err) {

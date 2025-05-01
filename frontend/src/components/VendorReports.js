@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import apiClient from "../api/auth"; // Import the apiClient
 
 const VendorReports = () => {
   const [reports, setReports] = useState([]);
@@ -24,16 +25,16 @@ const VendorReports = () => {
       
       const user = JSON.parse(sessionStorage.getItem("user"));
       const vendorId = user?.vendorId;
+      const token = sessionStorage.getItem("authToken"); // Assuming token is in sessionStorage
 
-      const response = await fetch(`http://localhost:5000/api/reports/getReportByVendor?vendorId=${vendorId}&month=${selectedMonth}`);
+      const response = await apiClient({
+        endpoint: `/reports/getReportByVendor?vendorId=${vendorId}&month=${selectedMonth}`,
+        method: "GET",
+        token: token,
+      });
 
-      if (!response.ok) {
-        throw new Error(`❌ HTTP error! Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log("🟢 Fetched Reports Data:", data);
-      setReports(data);
+      console.log("🟢 Fetched Reports Data:", response);
+      setReports(response);
     } catch (error) {
       console.error("❌ Error fetching reports:", error);
     } finally {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import apiClient from "../api/auth"; // Import the apiClient
 import "../css/Send.css";
 
 const subcategoryOptions = [
@@ -21,8 +21,8 @@ const Send = () => {
   useEffect(() => {
     const fetchPastReports = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/send/vendor-reports?vendorId=${vendorId}`);
-        setPastReports(res.data || []);
+        const res = await apiClient({ endpoint: `/send/vendor-reports?vendorId=${vendorId}` });
+        setPastReports(res || []);
       } catch (err) {
         console.error("Failed to fetch past reports:", err);
       }
@@ -73,8 +73,8 @@ const Send = () => {
     if (!dlrCode) return;
 
     try {
-      const res = await axios.get(`http://localhost:5000/api/send/dealer-details/${dlrCode}`);
-      const { dlrName, Location, oldRejectedReport } = res.data;
+      const res = await apiClient({ endpoint: `/send/dealer-details/${dlrCode}` });
+      const { dlrName, Location, oldRejectedReport } = res;
 
       const updated = [...dealers];
       updated[index].dlrName = dlrName || "Not found";
@@ -117,7 +117,11 @@ const Send = () => {
       };
 
       try {
-        await axios.post("http://localhost:5000/api/send/submit-report", payload);
+        await apiClient({
+          endpoint: "/send/submit-report",
+          method: "POST",
+          body: payload
+        });
         console.log("Submitted successfully");
       } catch (error) {
         console.error("Submission error:", error);

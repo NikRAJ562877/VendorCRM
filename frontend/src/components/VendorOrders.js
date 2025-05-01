@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import apiClient from "../api/auth"; // Importing apiClient
 import "../css/VendorOrders.css";
 
 const VendorOrders = () => {
@@ -12,8 +12,12 @@ const VendorOrders = () => {
     if (user && user.role === "vendor") {
       const fetchVendorOrders = async () => {
         try {
-          const res = await axios.get(`http://localhost:5000/api/vendorOrders/${user.vendorId}`);
-          setVendorOrders(res.data);
+          const res = await apiClient({
+            endpoint: `/vendorOrders/${user.vendorId}`,
+            method: "GET",
+            token: sessionStorage.getItem("authToken"), // Assuming token is stored in sessionStorage
+          });
+          setVendorOrders(res);
         } catch (err) {
           console.error("Error fetching vendor orders:", err);
         } finally {

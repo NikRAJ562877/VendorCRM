@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
+import apiClient from "../api/auth";  // Import your apiClient
 import "../css/VendorFilesView.css";
 
 const VendorFilesView = () => {
@@ -18,10 +18,11 @@ const VendorFilesView = () => {
   const fetchVendorInvoices = async () => {
     setError("");
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/admin-invoices/vendor-files/${vendorId}`
-      );
-      setInvoices(res.data);
+      const res = await apiClient({
+        endpoint: `/admin-invoices/vendor-files/${vendorId}`,
+        method: "GET",
+      });
+      setInvoices(res);
     } catch (err) {
       console.error("Error fetching vendor invoices:", err);
       setError("Failed to load vendor invoices.");

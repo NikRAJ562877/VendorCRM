@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import apiClient from "../api/auth";  // Import your apiClient
 import "../css/VendorDashboard.css";
 
 const VendorDashboard = () => {
@@ -20,10 +20,12 @@ const VendorDashboard = () => {
 
     try {
       setLoading(true);
-      const res = await axios.get(`http://localhost:5000/api/vendorOrders/orders/${vendorId}`, {
+      const res = await apiClient({
+        endpoint: `/vendorOrders/orders/${vendorId}`,
+        method: 'GET',
         params: { from_date: fromDate, to_date: toDate },
       });
-      setVendorOrders(res.data);
+      setVendorOrders(res);
     } catch (err) {
       console.error("Error fetching vendor orders:", err);
     } finally {

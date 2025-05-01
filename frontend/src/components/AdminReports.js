@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import apiClient from "../api/auth"; // Adjust the path if needed
 import "../css/AdminReports.css";
 
 const AdminReports = () => {
@@ -8,8 +8,8 @@ const AdminReports = () => {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/send/admin/reports");
-        setReports(res.data);
+        const data = await apiClient({ endpoint: "/send/admin/reports" });
+        setReports(data);
       } catch (error) {
         console.error("Failed to fetch reports", error);
       }
@@ -28,11 +28,17 @@ const AdminReports = () => {
     }
 
     try {
-      await axios.patch(`http://localhost:5000/api/send/report-status/${id}`, payload);
+      await apiClient({
+        endpoint: `/send/report-status/${id}`,
+        method: "PATCH",
+        body: payload,
+      });
       alert(`Report ${action}ed`);
       setReports((prev) =>
         prev.map((r) =>
-          r._id === id ? { ...r, status: action, rejectionReason: payload.rejectionReason || "" } : r
+          r._id === id
+            ? { ...r, status: action, rejectionReason: payload.rejectionReason || "" }
+            : r
         )
       );
     } catch (err) {

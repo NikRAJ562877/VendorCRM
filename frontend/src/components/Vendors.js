@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import apiClient from '../api/auth'; // Import the apiClient
 import '../css/Vendors.css';
 
 const Vendors = () => {
@@ -12,19 +12,19 @@ const Vendors = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/vendors', {
-        vendorId,
-        name,
-        email,
-        password,
+      // Use apiClient to send the POST request
+      const res = await apiClient({
+        endpoint: '/vendors',
+        method: 'POST',
+        body: { vendorId, name, email, password },
       });
-      setMessage(res.data.message);
+      setMessage(res.message); // Assuming the response has a 'message' field
       setVendorId('');
       setName('');
       setEmail('');
       setPassword('');
     } catch (err) {
-      setMessage(err.response?.data?.error || 'Error creating vendor');
+      setMessage(err?.response?.data?.error || 'Error creating vendor');
     }
   };
 

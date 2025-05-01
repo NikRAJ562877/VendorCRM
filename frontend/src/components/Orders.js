@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import "../css/Order.css";
-import axios from 'axios';
+import apiClient from "../api/auth"; // centralized API client
 
 const Orders = () => {
   const [file, setFile] = useState(null);
   const [orders, setOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [editableRows, setEditableRows] = useState({});
-  const [ setSelectedRows] = useState({});
+  const [setSelectedRows] = useState({});
   const [defaultDate, setDefaultDate] = useState("");
 
   const headers = [
@@ -18,9 +18,9 @@ const Orders = () => {
     { key: "Qty", label: "Qty" },
     { key: "Order no.", label: "Order No./New Order No." },
     { key: "PO", label: "PO" },
-    { key: "Location", label: "Location"},
-    { key: "Product", label:"Product"},
-    { key: "date", label: "Date" }
+    { key: "Location", label: "Location" },
+    { key: "Product", label: "Product" },
+    { key: "date", label: "Date" },
   ];
 
   useEffect(() => {
@@ -36,7 +36,6 @@ const Orders = () => {
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-    console.log("Selected file:", selectedFile);
     setFile(selectedFile);
   };
 
@@ -51,16 +50,17 @@ const Orders = () => {
       const jsonData = XLSX.utils.sheet_to_json(sheet);
 
       const extractedData = jsonData.map((row) => ({
-        "DLRCODE": row["DLRCODE"] || "",
-        "DLRNAME": row["DLRNAME"] || "",
+        DLRCODE: row["DLRCODE"] || "",
+        DLRNAME: row["DLRNAME"] || "",
         "Part no.": row["Part no."] || "",
-        "Qty": row["Qty"] || "",
+        Qty: row["Qty"] || "",
         "Order no.": row["Order no."] || "",
-        "PO": row["PO"] || "",
-        "Location": row["Location"] || row["Location"] || "",
-        "Product": row["Product"] || row["Product"] || "",
-        "date": defaultDate || row["Date"] || ""
+        PO: row["PO"] || "",
+        Location: row["Location"] || "",
+        Product: row["Product"] || "",
+        date: defaultDate || row["Date"] || "",
       }));
+
       setOrders(extractedData);
     };
     reader.readAsArrayBuffer(file);
@@ -99,7 +99,7 @@ const Orders = () => {
       return;
     }
 
-    const formattedOrders = orders.map(order => ({
+    const formattedOrders = orders.map((order) => ({
       dlrCode: order["DLRCODE"],
       dlrName: order["DLRNAME"],
       partNo: order["Part no."],
@@ -108,22 +108,20 @@ const Orders = () => {
       po: order["PO"],
       location: order["Location"],
       product: order["Product"],
-      date: order["date"] || new Date().toISOString().split('T')[0]
+      date: order["date"] || new Date().toISOString().split("T")[0],
     }));
 
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/order/upload",
-        { orders: formattedOrders },
-        {
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const res = await apiClient({
+        endpoint: "/order/upload",
+        method: "POST",
+        body: { orders: formattedOrders },
+      });
 
-      console.log("Response from API:", res.data);
+      console.log("Response from API:", res);
       alert(`Successfully uploaded ${orders.length} orders to the backend.`);
     } catch (error) {
-      console.error("Upload failed:", error.response ? error.response.data : error);
+      console.error("Upload failed:", error);
       alert("Failed to upload orders. Please check the server logs and try again.");
     }
   };
@@ -138,7 +136,6 @@ const Orders = () => {
     <div className="orders-container">
       <h2>Order Management</h2>
 
-      {/* Top controls in one row */}
       <div className="top-controls">
         <label htmlFor="date">Select Date:</label>
         <input
@@ -147,14 +144,12 @@ const Orders = () => {
           value={defaultDate}
           onChange={(e) => setDefaultDate(e.target.value)}
         />
-
         <input type="file" accept=".xlsx, .xls" onChange={handleFileChange} />
         <button onClick={uploadFile}>Upload</button>
         <button onClick={createNewRow}>New Row</button>
         <button onClick={sendToVendor}>Send to Vendor</button>
       </div>
 
-      {/* Search Filter */}
       {orders.length > 0 && (
         <div className="search-container">
           <input
@@ -166,7 +161,6 @@ const Orders = () => {
         </div>
       )}
 
-      {/* Orders Table */}
       <div className="table-container">
         {filteredOrders.length > 0 ? (
           <table>

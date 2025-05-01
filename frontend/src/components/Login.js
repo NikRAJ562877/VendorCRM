@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import apiClient from '../api/auth'; // ✅ Import your centralized API client
 import '../css/Login.css';
 
 const Login = ({ setUser }) => {
@@ -9,7 +9,6 @@ const Login = ({ setUser }) => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Clear stale session data on mount
   useEffect(() => {
     sessionStorage.removeItem('user');
   }, []);
@@ -19,26 +18,28 @@ const Login = ({ setUser }) => {
     console.log("Submitting login:", { vendorId, password });
 
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', { vendorId, password });
-      console.log("Login response:", res.data);
+      const res = await apiClient({
+        endpoint: '/auth/login',
+        method: 'POST',
+        body: { vendorId, password }
+      });
 
-      if (res.data.message === 'Login successful') {
-        // ✅ Store vendor's name & email in sessionStorage (if available)
+      console.log("Login response:", res);
+
+      if (res.message === 'Login successful') {
         sessionStorage.setItem('user', JSON.stringify({
-          vendorId: res.data.user.vendorId,
-          name: res.data.user.name || '',   // ✅ Store Name
-          email: res.data.user.email || '', // ✅ Store Email
-          role: res.data.user.role
+          vendorId: res.user.vendorId,
+          name: res.user.name || '',
+          email: res.user.email || '',
+          role: res.user.role
         }));
 
-        setUser(res.data.user);
-
-        // Redirect based on user role
-        navigate(res.data.user.role === 'admin' ? '/admin-dashboard' : '/vendor-dashboard');
+        setUser(res.user);
+        navigate(res.user.role === 'admin' ? '/admin-dashboard' : '/vendor-dashboard');
       }
     } catch (err) {
-      console.error("Login error:", err.response?.data);
-      setError(err.response?.data?.error || 'Login failed');
+      console.error("Login error:", err);
+      setError(err.error || 'Login failed');
     }
   };
 
