@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // Set base URL
-const API_BASE_URL = 'http://localhost:5000/api'; // Update if needed
-
+//const API_BASE_URL = 'http://localhost:5000/api'; // Update if needed
+const API_BASE_URL='https://vendorcrm.onrender.com/api'
 /**
  * apiClient - Makes API requests with axios
  * 
