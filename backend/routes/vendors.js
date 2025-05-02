@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Vendor = require('../models/Vendor');
+ 
 
 // POST /api/vendors
 router.post('/', async (req, res) => {
@@ -20,13 +21,14 @@ router.post('/', async (req, res) => {
     }
 
     // ✅ Create and save new vendor
-    const newVendor = new Vendor({ name, email, vendorId, password, role: 'vendor' });
-    await newVendor.save();
+    const newEmployee = new Employee({ name, email, vendorId, password, role: 'vendor' });
+    await newEmployee.save();
 
     res.json({ message: 'Vendor created successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 module.exports = router;

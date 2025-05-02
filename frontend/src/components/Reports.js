@@ -236,18 +236,18 @@ const OrderForm = () => {
       </div>
 
       {/* Bottom Buttons */}
-      <div className="flex flex-col md:flex-row md:justify-between items-center gap-4 mt-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-4 mt-6">
         <button
           onClick={addRow}
-          className="bg-blue-600 text-white text-sm md:text-base px-4 py-2 md:px-6 md:py-2 rounded-md"
+          className="bg-blue-600 text-white text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-2 rounded-md"
           disabled={!selectedVendor || !selectedMonth} // Disable if no vendor/month selected
         >
           Add Row
         </button>
-        <h3 className="text-lg md:text-xl font-bold text-center">Final Total: ₹{finalTotal}</h3>
+        <h3 className="text-lg sm:text-xl font-bold text-center">Final Total: ₹{finalTotal}</h3>
         <button
           onClick={handleSubmit}
-          className="bg-green-600 text-white text-sm md:text-base px-4 py-2 md:px-6 md:py-2 rounded-md"
+          className="bg-green-600 text-white text-sm sm:text-base px-4 py-2 sm:px-6 sm:py-2 rounded-md"
           disabled={rows.length === 0}
         >
           Save Order

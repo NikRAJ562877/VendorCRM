@@ -12,6 +12,8 @@ import {
   TableBody,
   Paper,
   Stack,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -22,6 +24,9 @@ import apiClient from "../api/auth";
 export default function VendorOrders() {
   const [vendorOrders, setVendorOrders] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // Check if the screen is mobile
 
   useEffect(() => {
     const user = JSON.parse(sessionStorage.getItem("user"));
@@ -91,7 +96,12 @@ export default function VendorOrders() {
         <Typography>Loading vendor orders…</Typography>
       ) : (vendorOrders || []).length > 0 ? (
         <>
-          <Stack direction="row" spacing={2} mb={2}>
+          <Stack
+            direction={isMobile ? "column" : "row"}
+            spacing={2}
+            mb={2}
+            alignItems="flex-start"
+          >
             <Button variant="contained" onClick={downloadPDF}>
               Download PDF
             </Button>
@@ -100,7 +110,10 @@ export default function VendorOrders() {
             </Button>
           </Stack>
 
-          <TableContainer component={Paper}>
+          <TableContainer
+            component={Paper}
+            sx={{ maxWidth: "100%", overflowX: "auto" }}
+          >
             <Table>
               <TableHead>
                 <TableRow>

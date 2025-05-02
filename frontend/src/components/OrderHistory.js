@@ -1,7 +1,22 @@
 import React, { useEffect, useState } from "react";
-import apiClient from "../api/auth"; // ✅ Use your centralized API client
-import { Box, Grid, TextField, Button, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
- 
+import apiClient from "../api/auth";
+import {
+  Box,
+  Grid,
+  TextField,
+  Button,
+  Paper,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
+
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
@@ -11,6 +26,9 @@ const OrderHistory = () => {
   const [dealerName, setDealerName] = useState("");
   const [partNo, setPartNo] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -61,26 +79,35 @@ const OrderHistory = () => {
     setDealerName("");
     setPartNo("");
     setSelectedDate("");
-    setFilteredOrders(orders); // Reset to show all orders
+    setFilteredOrders(orders);
   };
 
-  if (loading) return <Typography>Loading order history...</Typography>;
-  if (error) return <Typography>{error}</Typography>;
+  if (loading) return <Typography sx={{ mt: 8 }}>Loading order history...</Typography>;
+  if (error) return <Typography sx={{ mt: 8 }}>{error}</Typography>;
 
   return (
-    <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+    <Box
+      sx={{
+        flexGrow: 1,
+        px: { xs: 2, sm: 3 },
+        py: { xs: 2, sm: 3 },
+        mt: 8,
+      }}
+    >
       <Typography variant="h5" gutterBottom>
         Order History
       </Typography>
 
-      <Paper sx={{ p: 3, mb: 4 }}>
-        <Grid container spacing={3}>
+      {/* Filters */}
+      <Paper sx={{ p: 2, mb: 4 }}>
+        <Grid container spacing={2}>
           <Grid item xs={12} sm={4}>
             <TextField
               label="Search by Dealer Name"
               value={dealerName}
               onChange={(e) => setDealerName(e.target.value)}
               fullWidth
+              size="small"
             />
           </Grid>
 
@@ -90,6 +117,7 @@ const OrderHistory = () => {
               value={partNo}
               onChange={(e) => setPartNo(e.target.value)}
               fullWidth
+              size="small"
             />
           </Grid>
 
@@ -100,18 +128,17 @@ const OrderHistory = () => {
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               fullWidth
-              InputLabelProps={{
-                shrink: true,
-              }}
+              size="small"
+              InputLabelProps={{ shrink: true }}
             />
           </Grid>
 
-          <Grid item xs={12}>
+          <Grid item xs={12} textAlign={isMobile ? "center" : "right"}>
             <Button
               variant="contained"
               color="secondary"
               onClick={handleClearFilters}
-              sx={{ mt: 2 }}
+              sx={{ mt: { xs: 1, sm: 2 } }}
             >
               Clear Filters
             </Button>
@@ -119,9 +146,10 @@ const OrderHistory = () => {
         </Grid>
       </Paper>
 
-      <Paper sx={{ p: 3 }}>
-        <TableContainer>
-          <Table>
+      {/* Table */}
+      <Paper sx={{ p: 2, overflowX: "auto" }}>
+        <TableContainer component="div">
+          <Table size="small" sx={{ minWidth: 600 }}>
             <TableHead>
               <TableRow>
                 <TableCell>Order No.</TableCell>
@@ -143,12 +171,16 @@ const OrderHistory = () => {
                     <TableCell>{order.partNo}</TableCell>
                     <TableCell>{order.qty}</TableCell>
                     <TableCell>{order.po}</TableCell>
-                    <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      {new Date(order.date).toLocaleDateString()}
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7}>No orders found.</TableCell>
+                  <TableCell colSpan={7} align="center">
+                    No orders found.
+                  </TableCell>
                 </TableRow>
               )}
             </TableBody>

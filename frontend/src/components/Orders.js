@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
-import { Box, Grid, TextField, Button, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
-import apiClient from "../api/auth"; // centralized API client
- 
+import {
+  Box, Grid, TextField, Button, Paper, Typography,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  useMediaQuery, useTheme
+} from "@mui/material";
+import apiClient from "../api/auth";
+
 const Orders = () => {
   const [file, setFile] = useState(null);
   const [orders, setOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [editableRows, setEditableRows] = useState({});
   const [defaultDate, setDefaultDate] = useState("");
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const headers = [
     { key: "DLRCODE", label: "DLR CODE" },
@@ -128,13 +135,13 @@ const Orders = () => {
   );
 
   return (
-    <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+    <Box component="main" sx={{ flexGrow: 1, p: 2, mt: 8 }}>
       <Typography variant="h5" gutterBottom>
         Order Management
       </Typography>
 
-      <Paper sx={{ p: 3, mb: 4 }}>
-        <Grid container spacing={3} alignItems="center">
+      <Paper sx={{ p: 2, mb: 4 }}>
+        <Grid container spacing={2}>
           <Grid item xs={12} sm={4}>
             <TextField
               label="Select Date"
@@ -142,12 +149,9 @@ const Orders = () => {
               value={defaultDate}
               onChange={(e) => setDefaultDate(e.target.value)}
               fullWidth
-              InputLabelProps={{
-                shrink: true,
-              }}
+              InputLabelProps={{ shrink: true }}
             />
           </Grid>
-
           <Grid item xs={12} sm={4}>
             <input
               type="file"
@@ -156,48 +160,29 @@ const Orders = () => {
               style={{ width: "100%" }}
             />
           </Grid>
-
           <Grid item xs={12} sm={4}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={uploadFile}
-              sx={{ width: "100%" }}
-            >
+            <Button variant="contained" color="primary" fullWidth onClick={uploadFile}>
               Upload
             </Button>
           </Grid>
-        </Grid>
 
-        <Grid container spacing={3} alignItems="center" sx={{ mt: 2 }}>
           <Grid item xs={12} sm={4}>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={createNewRow}
-              sx={{ width: "100%" }}
-            >
+            <Button variant="contained" color="secondary" fullWidth onClick={createNewRow}>
               New Row
             </Button>
           </Grid>
-
           <Grid item xs={12} sm={4}>
-            <Button
-              variant="contained"
-              color="success"
-              onClick={sendToVendor}
-              sx={{ width: "100%" }}
-            >
+            <Button variant="contained" color="success" fullWidth onClick={sendToVendor}>
               Send to Vendor
             </Button>
           </Grid>
         </Grid>
       </Paper>
 
-      <Paper sx={{ p: 3 }}>
+      <Paper sx={{ p: 2 }}>
         {orders.length > 0 && (
-          <Grid container spacing={3} sx={{ mb: 2 }}>
-            <Grid item xs={12} sm={6}>
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={12}>
               <TextField
                 label="Search orders..."
                 value={searchTerm}
@@ -209,59 +194,61 @@ const Orders = () => {
         )}
 
         {filteredOrders.length > 0 ? (
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  {headers.map((header) => (
-                    <TableCell key={header.key}>{header.label}</TableCell>
-                  ))}
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredOrders.map((order, index) => (
-                  <TableRow key={index}>
+          <Box sx={{ overflowX: "auto" }}>
+            <TableContainer>
+              <Table size={isMobile ? "small" : "medium"}>
+                <TableHead>
+                  <TableRow>
                     {headers.map((header) => (
-                      <TableCell key={header.key}>
-                        {editableRows[index] ? (
-                          <TextField
-                            type={header.key === "date" ? "date" : "text"}
-                            value={order[header.key]}
-                            onChange={(e) =>
-                              handleInputChange(index, header.key, e.target.value)
-                            }
-                            fullWidth
-                            InputLabelProps={{
-                              shrink: true,
-                            }}
-                          />
-                        ) : (
-                          order[header.key] || ""
-                        )}
-                      </TableCell>
+                      <TableCell key={header.key}>{header.label}</TableCell>
                     ))}
-                    <TableCell>
-                      <Button
-                        variant="outlined"
-                        onClick={() => toggleEditRow(index)}
-                        sx={{ mr: 1 }}
-                      >
-                        {editableRows[index] ? "Save" : "Edit"}
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={() => deleteRow(index)}
-                      >
-                        Delete
-                      </Button>
-                    </TableCell>
+                    <TableCell>Actions</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                </TableHead>
+                <TableBody>
+                  {filteredOrders.map((order, index) => (
+                    <TableRow key={index}>
+                      {headers.map((header) => (
+                        <TableCell key={header.key}>
+                          {editableRows[index] ? (
+                            <TextField
+                              type={header.key === "date" ? "date" : "text"}
+                              value={order[header.key]}
+                              onChange={(e) =>
+                                handleInputChange(index, header.key, e.target.value)
+                              }
+                              fullWidth
+                              InputLabelProps={{ shrink: true }}
+                            />
+                          ) : (
+                            order[header.key] || ""
+                          )}
+                        </TableCell>
+                      ))}
+                      <TableCell>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => toggleEditRow(index)}
+                          sx={{ mb: isMobile ? 1 : 0, mr: 1 }}
+                        >
+                          {editableRows[index] ? "Save" : "Edit"}
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          size="small"
+                          onClick={() => deleteRow(index)}
+                        >
+                          Delete
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
         ) : (
           <Typography>No matching results found.</Typography>
         )}

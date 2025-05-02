@@ -11,6 +11,8 @@ import {
   Collapse,
   IconButton,
   CircularProgress,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { ExpandMore as ExpandMoreIcon } from "@mui/icons-material";
 import apiClient from "../api/auth";
@@ -18,6 +20,8 @@ import apiClient from "../api/auth";
 export default function AdminReports() {
   const [reports, setReports] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     (async () => {
@@ -32,8 +36,7 @@ export default function AdminReports() {
   }, []);
 
   const handleAction = async (id, action) => {
-    if (!window.confirm(`Are you sure you want to ${action} this report?`))
-      return;
+    if (!window.confirm(`Are you sure you want to ${action} this report?`)) return;
     const payload = { status: action };
     if (action === "Rejected") {
       const reason = prompt("Enter reason for rejection:");
@@ -60,7 +63,10 @@ export default function AdminReports() {
 
   if (reports === null) {
     return (
-      <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8, textAlign: "center" }}>
+      <Box
+        component="main"
+        sx={{ flexGrow: 1, p: 3, mt: 8, textAlign: "center" }}
+      >
         <Toolbar />
         <CircularProgress />
       </Box>
@@ -68,9 +74,16 @@ export default function AdminReports() {
   }
 
   return (
-    <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+    <Box
+      component="main"
+      sx={{
+        flexGrow: 1,
+        p: { xs: 2, sm: 3 },
+        mt: { xs: 6, sm: 8 },
+      }}
+    >
       <Toolbar />
-      <Typography variant="h5" gutterBottom>
+      <Typography variant={isMobile ? "h6" : "h5"} gutterBottom>
         Submitted Dealer Reports
       </Typography>
 

@@ -8,6 +8,7 @@ import {
   IconButton,
   Button,
   Stack,
+  Grid,
 } from "@mui/material";
 import { Delete as DeleteIcon, Add as AddIcon, Upload as UploadIcon } from "@mui/icons-material";
 import apiClient from "../api/auth";
@@ -83,53 +84,70 @@ export default function VendorInvoiceUpload() {
       <Stack spacing={2} mb={2}>
         {invoices.map((inv, idx) => (
           <Paper key={idx} sx={{ p: 2 }}>
-            <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
-              <TextField
-                label="Invoice No."
-                name="invoiceNo"
-                value={inv.invoiceNo}
-                onChange={(e) => handleChange(idx, e)}
-              />
-              <TextField
-                label="Date"
-                type="date"
-                name="date"
-                value={inv.date}
-                onChange={(e) => handleChange(idx, e)}
-                InputLabelProps={{ shrink: true }}
-              />
-              <TextField
-                label="Month"
-                type="month"
-                name="month"
-                value={inv.month}
-                onChange={(e) => handleChange(idx, e)}
-                InputLabelProps={{ shrink: true }}
-              />
-              <TextField
-                label="Amount"
-                type="number"
-                name="amount"
-                value={inv.amount}
-                onChange={(e) => handleChange(idx, e)}
-              />
-              <Button variant="contained" component="label">
-                Select Files
-                <input
-                  type="file"
-                  name="file"
-                  hidden
-                  multiple
+            <Grid container spacing={2} alignItems="center" flexWrap="wrap">
+              <Grid item xs={12} sm={6} md={4}>
+                <TextField
+                  label="Invoice No."
+                  name="invoiceNo"
+                  value={inv.invoiceNo}
                   onChange={(e) => handleChange(idx, e)}
+                  fullWidth
                 />
-              </Button>
-              <IconButton
-                color="error"
-                onClick={() => deleteInvoice(idx)}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Stack>
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <TextField
+                  label="Date"
+                  type="date"
+                  name="date"
+                  value={inv.date}
+                  onChange={(e) => handleChange(idx, e)}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <TextField
+                  label="Month"
+                  type="month"
+                  name="month"
+                  value={inv.month}
+                  onChange={(e) => handleChange(idx, e)}
+                  InputLabelProps={{ shrink: true }}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <TextField
+                  label="Amount"
+                  type="number"
+                  name="amount"
+                  value={inv.amount}
+                  onChange={(e) => handleChange(idx, e)}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <Button variant="contained" component="label" fullWidth>
+                  Select Files
+                  <input
+                    type="file"
+                    name="file"
+                    hidden
+                    multiple
+                    onChange={(e) => handleChange(idx, e)}
+                  />
+                </Button>
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <IconButton
+                  color="error"
+                  onClick={() => deleteInvoice(idx)}
+                  fullWidth
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Grid>
+            </Grid>
           </Paper>
         ))}
       </Stack>
@@ -138,11 +156,13 @@ export default function VendorInvoiceUpload() {
         Total Amount: {totalAmount.toLocaleString()}
       </Typography>
 
-      <Stack direction="row" spacing={2}>
+      <Stack direction="row" spacing={2} mb={3} flexWrap="wrap">
         <Button
           variant="outlined"
           startIcon={<AddIcon />}
           onClick={addInvoice}
+          fullWidth
+          sm={false}
         >
           Add Invoice
         </Button>
@@ -151,6 +171,8 @@ export default function VendorInvoiceUpload() {
           startIcon={<UploadIcon />}
           onClick={handleSubmit}
           disabled={invoices.length === 0}
+          fullWidth
+          sm={false}
         >
           Submit Invoices
         </Button>

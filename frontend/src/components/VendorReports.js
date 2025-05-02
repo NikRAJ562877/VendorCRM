@@ -17,6 +17,8 @@ import {
   TableBody,
   CircularProgress,
   Stack,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -30,6 +32,9 @@ export default function VendorReports() {
     "January","February","March","April","May","June",
     "July","August","September","October","November","December"
   ];
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // Check if the screen is mobile
 
   const fetchReports = async () => {
     if (!selectedMonth) {
@@ -100,7 +105,12 @@ export default function VendorReports() {
         Vendor Reports
       </Typography>
 
-      <Stack direction="row" spacing={2} alignItems="center" mb={3}>
+      <Stack
+        direction={isMobile ? "column" : "row"}
+        spacing={2}
+        alignItems="center"
+        mb={3}
+      >
         <FormControl sx={{ minWidth: 180 }}>
           <InputLabel id="month-label">Month</InputLabel>
           <Select
@@ -119,11 +129,11 @@ export default function VendorReports() {
             ))}
           </Select>
         </FormControl>
-        <Button variant="contained" onClick={fetchReports}>
+        <Button variant="contained" onClick={fetchReports} fullWidth={isMobile}>
           Search
         </Button>
         {reports.length > 0 && (
-          <Button variant="outlined" onClick={downloadPDF}>
+          <Button variant="outlined" onClick={downloadPDF} fullWidth={isMobile}>
             Download PDF
           </Button>
         )}
@@ -138,11 +148,14 @@ export default function VendorReports() {
             : "Please select a month and click Search."}
         </Typography>
       ) : (
-        <TableContainer component={Paper}>
+        <TableContainer
+          component={Paper}
+          sx={{ maxWidth: "100%", overflowX: "auto" }}
+        >
           <Table>
             <TableHead>
               <TableRow>
-                {["Vendor ID","Category","Part No","Product Name","Qty","Amount","Total","Final Total"].map((h) => (
+                {["Vendor ID", "Category", "Part No", "Product Name", "Qty", "Amount", "Total", "Final Total"].map((h) => (
                   <TableCell key={h}>{h}</TableCell>
                 ))}
               </TableRow>

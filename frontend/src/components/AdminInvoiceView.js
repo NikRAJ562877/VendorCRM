@@ -9,18 +9,21 @@ import {
   CardActionArea,
   CardContent,
   CircularProgress,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import apiClient from "../api/auth";
 
 export default function AdminInvoiceView() {
   const [vendorIds, setVendorIds] = useState(null);
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
     (async () => {
       try {
         const invoices = await apiClient({ endpoint: "/admin-invoices" });
-        // if your client wraps data in `data`, do: const invoices = res.data
         const ids = Array.isArray(invoices)
           ? invoices.map((inv) => inv.vendorId)
           : invoices.data?.map((inv) => inv.vendorId) ?? [];
@@ -37,7 +40,7 @@ export default function AdminInvoiceView() {
   };
 
   return (
-    <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+    <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, sm: 3 }, mt: 8 }}>
       <Toolbar />
       <Typography variant="h5" gutterBottom>
         Vendor Invoices
@@ -51,11 +54,15 @@ export default function AdminInvoiceView() {
         <Grid container spacing={2}>
           {vendorIds.map((id) => (
             <Grid item xs={12} sm={6} md={4} key={id}>
-              <Card>
+              <Card sx={{ height: "100%" }}>
                 <CardActionArea onClick={() => handleVendorClick(id)}>
                   <CardContent>
-                    <Typography variant="subtitle1">Vendor ID</Typography>
-                    <Typography variant="h6">{id}</Typography>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Vendor ID
+                    </Typography>
+                    <Typography variant="h6" sx={{ wordBreak: "break-word" }}>
+                      {id}
+                    </Typography>
                   </CardContent>
                 </CardActionArea>
               </Card>

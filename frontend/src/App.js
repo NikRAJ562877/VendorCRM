@@ -18,12 +18,14 @@ import ReportHistory from './components/ReportHistory';
 import VendorFilesView from './components/VendorFilesView';
 import Send from './components/Send';
 import AdminReports from './components/AdminReports';
+import Empl from './components/Empl';
+import EmpLayout from './components/EmpLayout'; // ✅ Import your new layout
+import EmpDashboard from './components/EmpDashboard'; // ✅ Import the new employee dashboard
 
 // 🆕 MUI Admin Layout
 import AdminLayout from './components/AdminLayout';
 // 🆕 MUI Vendor Layout
 import VendorLayout from './components/VendorLayout';
- 
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -52,6 +54,7 @@ const App = () => {
               <Route path="orders" element={<Orders />} />
               <Route path="order-history" element={<OrderHistory />} />
               <Route path="vendors" element={<Vendors />} />
+              <Route path="Employee" element={<Empl />} />
               <Route path="vendor-orders" element={<VendorOrders />} />
               <Route path="admin-invoices" element={<AdminInvoiceView />} />
               <Route path="admin-reports" element={<AdminReports />} />
@@ -61,6 +64,17 @@ const App = () => {
               <Route path="reports" element={<Reports />} />
               <Route path="report-history" element={<ReportHistory />} />
               <Route path="*" element={<Navigate to="orders" replace />} />
+            </Route>
+          ) : user.role === 'employee' ? (
+            // Add employee layout and dashboard
+            <Route path="/" element={<EmpLayout />}>
+              <Route index element={<EmpDashboard />} />
+              <Route path="orders" element={<Orders />} />
+              <Route path="order-history" element={<OrderHistory />} />
+              <Route path="vendors" element={<Vendors />} />
+              <Route path="employee-report" element={<VendorReports />} />
+              <Route path="send" element={<Send />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           ) : (
             <Route path="/" element={<VendorLayout />}>

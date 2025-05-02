@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import apiClient from '../api/auth'; // Import the apiClient
-import { TextField, Button, Box, Typography, Alert } from '@mui/material'; // MUI components
+import { TextField, Button, Box, Typography, Alert, useMediaQuery, useTheme } from '@mui/material'; // MUI components
 
 const Vendors = () => {
   const [vendorId, setVendorId] = useState('');
@@ -31,9 +31,13 @@ const Vendors = () => {
     }
   };
 
+  // Use media query to check if the screen is mobile
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   return (
     <Box sx={{ padding: 3, maxWidth: 600, margin: 'auto' }}>
-      <Typography variant="h4" gutterBottom align="center">
+      <Typography variant={isMobile ? 'h5' : 'h4'} gutterBottom align="center">
         Create Vendor
       </Typography>
 
@@ -85,7 +89,7 @@ const Vendors = () => {
         </Box>
 
         <Box sx={{ mb: 2 }}>
-          <Button variant="contained" color="primary" fullWidth type="submit">
+          <Button variant="contained" color="primary" fullWidth={isMobile} type="submit">
             Create Vendor
           </Button>
         </Box>

@@ -27,15 +27,26 @@ const Login = ({ setUser }) => {
       console.log("Login response:", res);
 
       if (res.message === 'Login successful') {
-        sessionStorage.setItem('user', JSON.stringify({
+        const user = {
           vendorId: res.user.vendorId,
           name: res.user.name || '',
           email: res.user.email || '',
           role: res.user.role
-        }));
+        };
 
-        setUser(res.user);
-        navigate(res.user.role === 'admin' ? '/admin-dashboard' : '/vendor-dashboard');
+        sessionStorage.setItem('user', JSON.stringify(user));
+        setUser(user);
+
+        // Navigate based on the user's role
+        if (res.user.role === 'admin') {
+          navigate('/admin-dashboard');
+        } else if (res.user.role === 'employee') {
+          navigate('/employee-dashboard');
+        } else if (res.user.role === 'vendor') {
+          navigate('/vendor-dashboard');
+        } else {
+          setError('Unknown role, please contact admin.');
+        }
       }
     } catch (err) {
       console.error("Login error:", err);

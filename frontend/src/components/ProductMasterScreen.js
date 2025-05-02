@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import apiClient from "../api/auth"; // centralized API client
-import { Button, TextField, MenuItem, Select, FormControl, InputLabel, Typography, Box } from '@mui/material';
+import { Button, TextField, MenuItem, Select, FormControl, InputLabel, Typography, Box, Grid } from '@mui/material';
 
 const ProductMaster = () => {
   const [category, setCategory] = useState("");
@@ -43,7 +43,7 @@ const ProductMaster = () => {
 
   return (
     <Box sx={{ maxWidth: 500, mx: "auto", mt: 3, padding: 2, border: "1px solid #ddd", borderRadius: 2 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h4" gutterBottom align="center">
         Product Master
       </Typography>
       {message && (
@@ -53,57 +53,69 @@ const ProductMaster = () => {
       )}
 
       <form onSubmit={handleSubmit}>
-        <FormControl fullWidth sx={{ mb: 2 }}>
-          <InputLabel>Category</InputLabel>
-          <Select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            label="Category"
-            required
-          >
-            <MenuItem value="">Select Category</MenuItem>
-            {categories.map((cat, index) => (
-              <MenuItem key={index} value={cat}>
-                {cat}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <FormControl fullWidth sx={{ mb: 2 }}>
+              <InputLabel>Category</InputLabel>
+              <Select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                label="Category"
+                required
+              >
+                <MenuItem value="">Select Category</MenuItem>
+                {categories.map((cat, index) => (
+                  <MenuItem key={index} value={cat}>
+                    {cat}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
 
-        <TextField
-          label="Part No."
-          variant="outlined"
-          fullWidth
-          value={partNo}
-          onChange={(e) => setPartNo(e.target.value)}
-          required
-          sx={{ mb: 2 }}
-        />
+          <Grid item xs={12}>
+            <TextField
+              label="Part No."
+              variant="outlined"
+              fullWidth
+              value={partNo}
+              onChange={(e) => setPartNo(e.target.value)}
+              required
+              sx={{ mb: 2 }}
+            />
+          </Grid>
 
-        <TextField
-          label="Product Name"
-          variant="outlined"
-          fullWidth
-          value={productName}
-          onChange={(e) => setProductName(e.target.value)}
-          required
-          sx={{ mb: 2 }}
-        />
+          <Grid item xs={12}>
+            <TextField
+              label="Product Name"
+              variant="outlined"
+              fullWidth
+              value={productName}
+              onChange={(e) => setProductName(e.target.value)}
+              required
+              sx={{ mb: 2 }}
+            />
+          </Grid>
 
-        <TextField
-          label="Amount"
-          variant="outlined"
-          fullWidth
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          required
-          sx={{ mb: 2 }}
-        />
+          <Grid item xs={12}>
+            <TextField
+              label="Amount"
+              variant="outlined"
+              fullWidth
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              required
+              sx={{ mb: 2 }}
+            />
+          </Grid>
 
-        <Button variant="contained" type="submit" fullWidth>
-          Save Product
-        </Button>
+          <Grid item xs={12}>
+            <Button variant="contained" type="submit" fullWidth>
+              Save Product
+            </Button>
+          </Grid>
+        </Grid>
       </form>
     </Box>
   );

@@ -53,7 +53,7 @@ const VendorFilesView = () => {
         <Grid container spacing={3}>
           {invoices.map((invoice) => (
             <Grid item xs={12} sm={6} md={4} key={invoice._id}>
-              {/* 3 cards per row */}
+              {/* 1 card per row on small screens, 2 per row on medium, and 3 per row on large */}
               <Card sx={{
                 display: 'flex',
                 flexDirection: 'column',

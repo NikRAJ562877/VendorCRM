@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Admin = require('../models/Admin');
 const Vendor = require('../models/Vendor');
+const Employee = require('../models/Employee');
 const bcrypt = require('bcryptjs');
 
 // POST /api/auth/login
@@ -25,31 +26,51 @@ router.post('/login', async (req, res) => {
       });
     }
 
-   // If no admin is found, try to find a vendor
-user = await Vendor.findOne({ vendorId });
+    // If no admin is found, try to find a vendor
+    user = await Vendor.findOne({ vendorId });
 
-if (!user) {
-  console.log("Vendor not found for vendorId:", vendorId);
-  return res.status(404).json({ error: 'User not found' });
-}
+    if (user) {
+      // Vendor credentials check
+      if (password !== user.password) {
+        console.log("Password mismatch for vendor:", vendorId);
+        return res.status(400).json({ error: 'Invalid credentials' });
+      }
+      console.log("Login successful for vendor:", vendorId);
+      return res.json({
+        message: 'Login successful',
+        user: {
+          vendorId: user.vendorId,
+          name: user.name,
+          email: user.email,
+          role: 'vendor',
+        }
+      });
+    }
 
-// Check password
-if (password !== user.password) {
-  console.log("Password mismatch for vendor:", vendorId);
-  return res.status(400).json({ error: 'Invalid credentials' });
-}
+    // If no admin or vendor, check if user is an employee
+    user = await Employee.findOne({ EmployeeId: vendorId });
 
-// ✅ Send name & email in response
-console.log("Login successful for vendor:", vendorId);
-return res.json({ 
-  message: 'Login successful', 
-  user: { 
-    vendorId: user.vendorId, 
-    name: user.name,       // ✅ Include name
-    email: user.email,     // ✅ Include email
-    role: 'vendor' 
-  } 
-});
+    if (!user) {
+      console.log("Employee not found for EmployeeId:", vendorId);
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check password for employee
+    if (password !== user.password) {
+      console.log("Password mismatch for employee:", vendorId);
+      return res.status(400).json({ error: 'Invalid credentials' });
+    }
+
+    console.log("Login successful for employee:", vendorId);
+    return res.json({
+      message: 'Login successful',
+      user: {
+        vendorId: user.EmployeeId,
+        name: user.name,
+        email: user.email,
+        role: 'employee',
+      }
+    });
 
   } catch (err) {
     console.error("Error during login:", err.message);

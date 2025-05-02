@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import apiClient from "../api/auth"; // your centralized client
-import { Box, Button, InputAdornment, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from '@mui/material';
+import { Box, Button, InputAdornment, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, Grid } from '@mui/material';
 
 const ReportHistory = () => {
   const [reports, setReports] = useState([]);
@@ -71,51 +71,59 @@ const ReportHistory = () => {
 
   return (
     <Box sx={{ padding: 3 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h4" gutterBottom align="center">
         Report History
       </Typography>
 
       {/* Filters */}
-      <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-        <TextField
-          label="Search by Product Name"
-          variant="outlined"
-          fullWidth
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <Button onClick={() => setSearchTerm("")} size="small">
-                  Clear
-                </Button>
-              </InputAdornment>
-            ),
-          }}
-        />
-        <TextField
-          label="Select Date"
-          type="date"
-          variant="outlined"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          InputLabelProps={{
-            shrink: true,
-          }}
-        />
-        <Button
-          variant="contained"
-          onClick={() => {
-            setSearchTerm("");
-            setSelectedDate("");
-          }}
-        >
-          Clear Filters
-        </Button>
-      </Box>
+      <Grid container spacing={2} sx={{ mb: 3 }} alignItems="center">
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Search by Product Name"
+            variant="outlined"
+            fullWidth
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <Button onClick={() => setSearchTerm("")} size="small">
+                    Clear
+                  </Button>
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Select Date"
+            type="date"
+            variant="outlined"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            fullWidth
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={() => {
+              setSearchTerm("");
+              setSelectedDate("");
+            }}
+          >
+            Clear Filters
+          </Button>
+        </Grid>
+      </Grid>
 
       {/* Table */}
-      <TableContainer sx={{ maxHeight: 400 }}>
+      <TableContainer sx={{ maxHeight: 400, overflowX: "auto" }}>
         <Table stickyHeader>
           <TableHead>
             <TableRow>

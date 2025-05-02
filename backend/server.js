@@ -29,6 +29,7 @@ const vendorInvoicesRoutes = require('./routes/vendorInvoices');
 const adminInvoicesRoutes = require('./routes/adminInvoices');
 const reportRoutes = require('./routes/reportRoutes');
 const reportHistoryRoute = require("./routes/reporthistory");
+const employeeRoute = require("./routes/employee")
  
 
 // Use routes
@@ -45,6 +46,7 @@ app.use("/api/admin-invoices", adminInvoicesRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/reporthistory", reportHistoryRoute);
 app.use("/api/send", require("./routes/send"));
+app.use("/api/employee", employeeRoute);
  
 
 const PORT = process.env.PORT || 5000;

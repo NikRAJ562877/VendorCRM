@@ -158,12 +158,13 @@ export default function Send() {
         Send Reports
       </Typography>
 
-      <FormControl sx={{ mb: 3, minWidth: 240 }}>
+      <FormControl sx={{ mb: 3, minWidth: "100%", maxWidth: 240 }}>
         <InputLabel>Company</InputLabel>
         <Select
           value={category}
           label="Company"
           onChange={(e) => setCategory(e.target.value)}
+          fullWidth
         >
           <MenuItem value="">
             <em>Select Company</em>
@@ -175,7 +176,7 @@ export default function Send() {
 
       {dealers.map((dealer, i) => (
         <Paper key={dealer.id} sx={{ p: 2, mb: 3 }}>
-          <Grid container spacing={2} alignItems="center">
+          <Grid container spacing={2} alignItems="center" direction="column" sm={{ direction: "row" }}>
             <Grid item xs={12} sm={3}>
               <TextField
                 label="Dealer Code"
@@ -208,6 +209,7 @@ export default function Send() {
                 variant="outlined"
                 color="error"
                 onClick={() => removeDealerForm(i)}
+                fullWidth
               >
                 Remove
               </Button>
@@ -260,7 +262,7 @@ export default function Send() {
         </Paper>
       ))}
 
-      <Stack direction="row" spacing={2} mb={4}>
+      <Stack direction="row" spacing={2} mb={4} justifyContent="space-between" flexWrap="wrap">
         <Button variant="outlined" onClick={addDealerForm} startIcon={<AddIcon />}>
           Add Dealer
         </Button>

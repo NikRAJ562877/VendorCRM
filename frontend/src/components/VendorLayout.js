@@ -1,4 +1,3 @@
-// src/components/layouts/VendorLayout.js
 import React, { useState } from 'react';
 import { Outlet, useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
@@ -6,12 +5,13 @@ import {
   AppBar,
   Toolbar,
   IconButton,
-  Typography,
   Drawer,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -27,6 +27,8 @@ const drawerWidth = 240;
 export default function VendorLayout() {
   const [open, setOpen] = useState(true);
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // Check if screen is small (mobile)
 
   const handleLogout = () => {
     sessionStorage.removeItem('user');
@@ -42,40 +44,67 @@ export default function VendorLayout() {
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <AppBar position="fixed" sx={{ zIndex: (t) => t.zIndex.drawer + 1 }}>
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            edge="start"
-            onClick={() => setOpen((o) => !o)}
-            sx={{ mr: 2 }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap>
-            Vendor Portal
-          </Typography>
-        </Toolbar>
-      </AppBar>
+<AppBar 
+  position="fixed" 
+  sx={{ 
+    zIndex: (t) => t.zIndex.drawer + 1, 
+    backgroundColor: 'silver', 
+    height: 64, // Set a fixed height for the AppBar
+  }}
+>
+  <Toolbar sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
+    {/* Menu Icon */}
+    <IconButton
+      color="inherit"
+      edge="start"
+      onClick={() => setOpen((prev) => !prev)}
+      sx={{ mr: 2 }}
+    >
+      <MenuIcon />
+    </IconButton>
+
+    {/* Logo Image */}
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-start', // Aligns logo to the left
+        flexGrow: 1, // Ensures the space between logo and menu is maintained
+      }}
+    >
+      <Box
+        component="img"
+        src="/AutorexXZ.png"
+        alt="Logo"
+        sx={{
+          height: 100, // Adjust logo height (e.g., 60px)
+          width: 'auto', // Maintain aspect ratio
+        }}
+      />
+    </Box>
+  </Toolbar>
+</AppBar>
+
+
 
       <Drawer
-        variant="persistent"
+        variant= 'persistent'
         open={open}
+        onClose={() => setOpen(false)}
         sx={{
           width: drawerWidth,
           flexShrink: 0,
           '& .MuiDrawer-paper': { width: drawerWidth, boxSizing: 'border-box' },
+          zIndex: 1,
+        }}
+        ModalProps={{
+          keepMounted: true, // Improve performance on mobile
         }}
       >
         <Toolbar />
         <List>
           {items.map(({ to, label, icon }) => (
-            <ListItemButton
-              key={to}
-              component={RouterLink}
-              to={to}
-              onClick={() => {}}
-            >
+            <ListItemButton key={to} component={RouterLink} to={to} onClick={() => {}}>
               <ListItemIcon>{icon}</ListItemIcon>
               <ListItemText primary={label} />
             </ListItemButton>
@@ -95,7 +124,7 @@ export default function VendorLayout() {
           flexGrow: 1,
           p: 3,
           mt: 8,
-          ml: open ? `${drawerWidth}px` : 0,
+          ml: open && !isMobile ? `${drawerWidth}px` : 0,
           transition: 'margin 0.3s',
         }}
       >

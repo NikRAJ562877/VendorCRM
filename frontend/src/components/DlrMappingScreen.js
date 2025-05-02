@@ -11,10 +11,11 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
+  TextField,
 } from "@mui/material";
 import Select from "react-select";
-import apiClient from "../api/auth"; // centralized apiClient
+import apiClient from "../api/auth";
 
 const productOptions = [
   { value: "Ceramic Coating", label: "Ceramic Coating" },
@@ -93,6 +94,7 @@ export default function DlrMappingScreen() {
         });
         alert("Mapping added!");
       }
+
       setEditId(null);
       setSelectedDlrCodes([]);
       setSelectedVendor(null);
@@ -106,7 +108,7 @@ export default function DlrMappingScreen() {
     }
   };
 
-  const handleEdit = m => {
+  const handleEdit = (m) => {
     setEditId(m._id);
     setSelectedVendor({ value: m.vendorId, label: m.vendorId });
     setSelectedDate(m.date || "");
@@ -114,7 +116,7 @@ export default function DlrMappingScreen() {
   };
 
   return (
-    <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+    <Box component="main" sx={{ flexGrow: 1, p: { xs: 1, sm: 2, md: 3 }, mt: 8 }}>
       <Toolbar />
       <Typography variant="h5" gutterBottom>
         DLR Code to Vendor Mapping
@@ -124,87 +126,68 @@ export default function DlrMappingScreen() {
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6} md={3}>
             <Typography>Select Vendor</Typography>
-            <Select
-              options={vendors}
-              value={selectedVendor}
-              onChange={setSelectedVendor}
-              placeholder="Search & select"
-              menuPortalTarget={document.body} // Attach menu to body
-              styles={{
-                menuPortal: base => ({
-                  ...base,
-                  zIndex: 9999, // Ensure dropdown appears above all content
-                }),
-                menu: base => ({
-                  ...base,
-                  position: 'absolute', // Ensure it's positioned properly
-                  top: 'auto', // Let the menu position dynamically
-                  bottom: '100%', // Position above the input
-                  transform: 'translateY(-8px)', // Fine-tune dropdown position
-                }),
-              }}
-            />
+            <Box sx={{ minWidth: "100%" }}>
+              <Select
+                options={vendors}
+                value={selectedVendor}
+                onChange={setSelectedVendor}
+                placeholder="Search & select"
+                styles={{
+                  container: base => ({ ...base, width: "100%" }),
+                  menuPortal: base => ({ ...base, zIndex: 9999 }),
+                }}
+                menuPortalTarget={document.body}
+              />
+            </Box>
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
             <Typography>Select Product Category</Typography>
-            <Select
-              options={productOptions}
-              value={productCategory}
-              onChange={opt => {
-                setProductCategory(opt);
-                fetchDlrCodes(opt.value);
-              }}
-              placeholder="Select product"
-              menuPortalTarget={document.body}
-              styles={{
-                menuPortal: base => ({
-                  ...base,
-                  zIndex: 9999,
-                }),
-                menu: base => ({
-                  ...base,
-                  position: 'absolute',
-                  top: 'auto',
-                  bottom: '100%',
-                  transform: 'translateY(-8px)',
-                }),
-              }}
-            />
+            <Box sx={{ minWidth: "100%" }}>
+              <Select
+                options={productOptions}
+                value={productCategory}
+                onChange={opt => {
+                  setProductCategory(opt);
+                  fetchDlrCodes(opt.value);
+                }}
+                placeholder="Select product"
+                styles={{
+                  container: base => ({ ...base, width: "100%" }),
+                  menuPortal: base => ({ ...base, zIndex: 9999 }),
+                }}
+                menuPortalTarget={document.body}
+              />
+            </Box>
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
             <Typography>Select DLR Codes</Typography>
-            <Select
-              options={dlrCodeOptions}
-              value={selectedDlrCodes}
-              onChange={setSelectedDlrCodes}
-              isMulti
-              placeholder="Choose codes"
-              menuPortalTarget={document.body}
-              styles={{
-                menuPortal: base => ({
-                  ...base,
-                  zIndex: 9999,
-                }),
-                menu: base => ({
-                  ...base,
-                  position: 'absolute',
-                  top: 'auto',
-                  bottom: '100%',
-                  transform: 'translateY(-8px)',
-                }),
-              }}
-            />
+            <Box sx={{ minWidth: "100%" }}>
+              <Select
+                options={dlrCodeOptions}
+                value={selectedDlrCodes}
+                onChange={setSelectedDlrCodes}
+                isMulti
+                placeholder="Choose codes"
+                styles={{
+                  container: base => ({ ...base, width: "100%" }),
+                  menuPortal: base => ({ ...base, zIndex: 9999 }),
+                }}
+                menuPortalTarget={document.body}
+              />
+            </Box>
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
             <Typography>Select Date</Typography>
-            <input
+            <TextField
               type="date"
               value={selectedDate}
-              onChange={e => setSelectedDate(e.target.value)}
-              style={{ width: "100%", padding: 8, boxSizing: "border-box" }}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              fullWidth
+              size="small"
+              InputLabelProps={{ shrink: true }}
             />
           </Grid>
 
@@ -220,8 +203,8 @@ export default function DlrMappingScreen() {
         Existing Mappings
       </Typography>
 
-      <TableContainer component={Paper} sx={{ mt: 4 }}>
-        <Table style={{ width: "100%", borderCollapse: "collapse" }}>
+      <TableContainer component={Paper} sx={{ mt: 4, overflowX: "auto" }}>
+        <Table style={{ width: "100%", minWidth: 600 }}>
           <TableHead>
             <TableRow>
               <TableCell>Vendor ID</TableCell>
